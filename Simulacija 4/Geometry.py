@@ -1,5 +1,3 @@
-
-
 class Point:
     
     x=0
