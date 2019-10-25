@@ -2,7 +2,16 @@
 from Geometry import Line
 from Geometry import Point
 
-duz=Line(Point(0,0),Point(1,0))
-duz1=Line(Point(2,0),Point(3,0))
-print(duz.Intercept(duz1))
+import math
+linije=[]
+p=Point(0,0)
+ref=Point(2,0)
+for i in range(0,21,1):
+    t=i*math.pi/10
+    pp=p
+    p=Point(round(math.cos(t),2),round(math.sin(t),2))
+    l=Line(pp,p)
+    linije.append(l)
+
+
 

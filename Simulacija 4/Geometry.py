@@ -1,5 +1,4 @@
 class Point:
-    
     x=0
     y=0
 
@@ -22,6 +21,30 @@ class Point:
         else:
             return False
 
+    def Sort_Lines_By_Distance(self,lines: list, SignificantDigits=10)->list:
+        import operator
+        
+        lines_with_dist=[]
+        lines1=[]
+
+        for line in lines:
+            lines_with_dist.append(
+                (round(line.Distance_To_Point(self),SignificantDigits),
+                line)
+                )
+
+        lines_with_dist.sort(key = operator.itemgetter(0))
+
+        for i in lines_with_dist:
+            lines1.append(i[1])
+
+        return lines1
+
+    #def Visible_Lines_From_A_Point(self, sorted_Lines:list)->list:
+
+
+        
+
 class Line:
     start=Point(0,0)
     end=Point(0,0)
@@ -40,6 +63,19 @@ class Line:
     
     def __call__(self)->tuple:
         return self.value
+
+    def Lenght(self)->float:
+        import math
+        return(
+                math.sqrt(
+                    (self.end.x-self.start.x)**2
+                    +
+                    (self.end.y-self.start.y)**2
+                )
+            )
+
+    def Midpoint(self)->Point:
+        return(Point((self.end.x+self.start.x)/2,(self.end.y+self.start.y)/2))
     
     def Angle_Of_Slope(self)->float:
         import math
@@ -103,6 +139,30 @@ class Line:
                 return None
         else:
             return None
+
+    def Distance_To_Point(self,p)->float:
+        return(Line(self.Midpoint(),p).Lenght())
+
+    def Line_start1_end2_if_Touching(self,other,epsilon=0.001):
+        if self.end.Match(other.start,epsilon):
+            return(Line(self.start,other.end))
+        elif self.start.Match(other.end,epsilon):
+            return(Line(other.start,self.end))
+        else:
+            return None
+
+def Connect_Lines(lines:list,epsilon=0.001)->list:
+
+
+    
+
+    
+
+
+    
+        
+        
+
 
 
 
