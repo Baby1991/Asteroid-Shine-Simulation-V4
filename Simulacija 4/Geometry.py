@@ -143,7 +143,7 @@ class Line:
     def Distance_To_Point(self,p)->float:
         return(Line(self.Midpoint(),p).Lenght())
 
-    def Line_start1_end2_if_Touching(self,other,epsilon=0.001):
+    def Line_if_Touching(self,other,epsilon=0.001):
         if self.end.Match(other.start,epsilon):
             return(Line(self.start,other.end))
         elif self.start.Match(other.end,epsilon):
@@ -151,8 +151,22 @@ class Line:
         else:
             return None
 
-def Connect_Lines(lines:list,epsilon=0.001)->list:
+def Find_Connected_Lines(lines:list,epsilon=0.001)->tuple:
+    for line in lines:
+        for line1 in lines:
+            if line is not line1:
+                newline=line.Line_if_Touching(line1,epsilon)
+                if newline:
+                    return((newline,line,line1))
 
+def Connect_Lines(lines:list,epsilon=0.001)->list:
+    lines1=lines
+    while Find_Connected_Lines(lines1,epsilon):
+        r=Find_Connected_Lines(lines1,epsilon)
+        lines1.remove(r[1])
+        lines1.remove(r[2])
+        lines1.append(r[0])
+    return lines1
 
     
 
