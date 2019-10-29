@@ -146,7 +146,13 @@ class Line:
             return None
 
     def Distance_To_Point(self,p)->float:
-        return(Line(self.Midpoint(),p).Lenght())
+        return(
+            min(
+                Line(self.Midpoint(),p).Lenght(),
+                Line(self.start,p).Lenght(),
+                Line(self.end,p).Lenght(),
+                )
+            )
 
     def Line_if_Touching(self,other,epsilon=0.001):
         if self.end.Match(other.start,epsilon):
