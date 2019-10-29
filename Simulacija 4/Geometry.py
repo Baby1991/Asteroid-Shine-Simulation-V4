@@ -75,7 +75,12 @@ class Line:
             )
 
     def Midpoint(self)->Point:
-        return(Point((self.end.x+self.start.x)/2,(self.end.y+self.start.y)/2))
+        return(
+            Point(
+                (self.end.x+self.start.x)/2,
+                (self.end.y+self.start.y)/2
+                )
+            )
     
     def Angle_Of_Slope(self)->float:
         import math
