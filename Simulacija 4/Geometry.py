@@ -21,7 +21,7 @@ class Point:
         else:
             return False
 
-    def Sort_Lines_By_Distance(self,lines: list, SignificantDigits=10)->list:
+    def Sort_Lines_By_Distance(self,lines: list)->list:
         import operator
         
         lines_with_dist=[]
@@ -29,7 +29,7 @@ class Point:
 
         for line in lines:
             lines_with_dist.append(
-                (round(line.Distance_To_Point(self),SignificantDigits),
+                (line.Distance_To_Point(self),
                 line)
                 )
 
@@ -40,7 +40,8 @@ class Point:
 
         return lines1
 
-    #def Visible_Lines_From_A_Point(self, sorted_Lines:list)->list:
+    #def Line_Visible(self,line,epsilon=0.001):
+
 
 
         
@@ -102,29 +103,22 @@ class Line:
     
     def Angle(self,Line2,epsilon=0.001)->float:
         import math
-        if( 
-        (self.k-Line2.k)<=epsilon 
-        and 
-        (self.n-Line2.n)<=epsilon
-        ):
-            return None
-        else:
-            return(
-                math.atan(
-                abs(
-                    (Line2.k-self.k)
-                    /
-                    (1+(self.k*Line2.k))
+        return(
+            math.atan(
+            abs(
+                (Line2.k-self.k)
+                /
+                (1+(self.k*Line2.k))
                 )
                 )
                 )
 
-    def Intercept(self,Line2,epsilon=0.001,SignificantDigits=6):
+    def Intercept(self,Line2,epsilon=0.001):
         k1=self.k
         k2=Line2.k
         n1=self.n
         n2=Line2.n
-        if k1 != k2:
+        if abs(k1-k2)>epsilon:
             x=(n2-n1)/(k1-k2)
             y=k1*x+n1
             if( 
@@ -137,22 +131,29 @@ class Line:
             (Line2.end.x+epsilon>=x)
             ):
                 return Point(
-                round(x,SignificantDigits),
-                round(y,SignificantDigits)
+                x,
+                y
                 )
             else:
                 return None
         else:
             return None
 
-    def Distance_To_Point(self,p)->float:
-        return(
-            min(
-                Line(self.Midpoint(),p).Lenght(),
-                Line(self.start,p).Lenght(),
-                Line(self.end,p).Lenght(),
-                )
-            )
+    def Distance_To_Point(self,p,epsilon=0.001)->float:
+        from numpy import arccos, array, dot, pi, cross
+        from numpy.linalg import det, norm
+        
+        A=array([self.start.x,self.start.y])
+        B=array([self.end.x,self.end.y])
+        P=array([p.x,p.y])
+
+        if all(abs(A-P)<=epsilon) or all(abs(B-P)<=epsilon):
+            return 0
+        if arccos(dot((P - A) / norm(P - A), (B - A) / norm(B - A))) > pi / 2:
+            return norm(P - A)
+        if arccos(dot((P - B) / norm(P - B), (A - B) / norm(A - B))) > pi / 2:
+            return norm(P - B)
+        return norm(cross(A-B, A-P))/norm(B-A)
 
     def Line_if_Touching(self,other,epsilon=0.001):
         if self.end.Match(other.start,epsilon):
@@ -178,6 +179,8 @@ def Connect_Lines(lines:list,epsilon=0.001)->list:
         lines1.remove(r[2])
         lines1.append(r[0])
     return lines1
+
+
 
     
 
