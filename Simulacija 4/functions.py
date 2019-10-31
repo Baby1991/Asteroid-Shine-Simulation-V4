@@ -1,22 +1,24 @@
 
-from Geometry import Line
-from Geometry import Point
-from Geometry import Connect_Lines
+from Geometry import *
 
-import math
+from math import pi,cos,sin
 linije=[]
-step=math.pi/10
+step=pi/10
 ref=Point(2,0)
+"""
 for i in range(5,15,1):
     t0=i*step
     t=(i+1)*step
-    pp=Point(round(math.cos(t0),10),round(math.sin(t0),10))
-    p=Point(round(math.cos(t),10),round(math.sin(t),10))
+    pp=Point(round(cos(t0),10),round(sin(t0),10))
+    p=Point(round(cos(t),10),round(sin(t),10))
     l=Line(pp,p)
     linije.append(l)
 print(linije)
 print("\n")
-ref.Sort_Lines_By_Distance(linije)
-linije=Connect_Lines(linije)
-print(linije)
+
+sectors=linije
+"""
+l1=Line(Point(-2,2),Point(-2,-2))
+l2=Line(Point(0,2),Point(0,0))
+print(l1.Visibility(l2,ref))
 

@@ -12,7 +12,10 @@ class Point:
     
     def __call__(self)->tuple:
         return self.value
-    
+
+    def __round__(self,SignificantDigits=0):
+        return Point(round(self()[0],SignificantDigits),round(self()[1],SignificantDigits))
+
     def Match(self,p2,epsilon=0.001)->bool:
         import math
         d=math.sqrt(sum([(a - b) ** 2 for a, b in zip(self(), p2())]))
@@ -40,11 +43,17 @@ class Point:
 
         return lines1
 
-    #def Line_Visible(self,line,epsilon=0.001):
+    def Angle_Points(self,p1,p2,epsilon=0.001)->float:
+        from math import atan2
+        return(
+            atan2(p2.y-self.y,p2.x-self.x)
+            -
+            atan2(p1.y-self.y,p1.x-self.x)
+            )
 
-
-
-        
+    def Distance(self,p)->float:
+        from math import sqrt
+        return sqrt((self.x - p.x)**2 + (self.y - p.y)**2)
 
 class Line:
     start=Point(0,0)
@@ -65,6 +74,13 @@ class Line:
     def __call__(self)->tuple:
         return self.value
 
+    def __round__(self,SignificantDigits=0):
+        p1=self.start
+        p2=self.end
+        p1=Point(round(p1()[0],SignificantDigits),round(p1()[1],SignificantDigits))
+        p2=Point(round(p2()[0],SignificantDigits),round(p2()[1],SignificantDigits))
+        return Line(p1,p2)
+
     def Lenght(self)->float:
         import math
         return(
@@ -82,6 +98,9 @@ class Line:
                 (self.end.y+self.start.y)/2
                 )
             )
+
+    def On_Line(self,p,epsilon=0.001)->bool:
+        return self.start.Distance(p)+self.end.Distance(p)-self.start.Distance(self.end)<=epsilon
     
     def Angle_Of_Slope(self)->float:
         import math
@@ -101,7 +120,7 @@ class Line:
         x=self.start.x
         return(y-self.Slope()*x)
     
-    def Angle(self,Line2,epsilon=0.001)->float:
+    def Angle_Lines(self,Line2,epsilon=0.001)->float:
         import math
         return(
             math.atan(
@@ -113,7 +132,7 @@ class Line:
                 )
                 )
 
-    def Intercept(self,Line2,epsilon=0.001):
+    def Intercept_Segment2(self,Line2,epsilon=0.001):
         k1=self.k
         k2=Line2.k
         n1=self.n
@@ -121,19 +140,31 @@ class Line:
         if abs(k1-k2)>epsilon:
             x=(n2-n1)/(k1-k2)
             y=k1*x+n1
+            p=Point(x,y)
             if( 
-            (self.start.x-epsilon<=x)
+            self.On_Line(p)
             and
-            (self.end.x+epsilon>=x)
-            and
-            (Line2.start.x-epsilon<=x)
-            and
-            (Line2.end.x+epsilon>=x)
+            Line2.On_Line(p)
             ):
-                return Point(
-                x,
-                y
-                )
+                return p
+            else:
+                return None
+        else:
+            return None
+
+    def Intercept_Segment_Line(self,Line1,epsilon=0.001):
+        k1=self.k
+        k2=Line1.k
+        n1=self.n
+        n2=Line1.n
+        if abs(k1-k2)>epsilon:
+            x=(n2-n1)/(k1-k2)
+            y=k1*x+n1
+            p=Point(x,y)
+            if( 
+            self.On_Line(p)
+            ):
+                return p
             else:
                 return None
         else:
@@ -163,6 +194,59 @@ class Line:
         else:
             return None
 
+    def Visibility(self,occluder,observer,epsilon=0.001)->tuple:
+        
+        p1=Line(observer,occluder.start)
+        p2=Line(observer,occluder.end)
+        l1=Line(observer,self.start)
+        l2=Line(observer,self.end)
+        z=self.Intercept_Segment_Line(p1,epsilon)
+        y=self.Intercept_Segment_Line(p2,epsilon)
+        pr1=l1.Intercept_Segment_Line(occluder,epsilon)
+        pr2=l2.Intercept_Segment_Line(occluder,epsilon)
+
+        if z is None:
+            if y is None:
+                
+                angP1P2=observer.Angle_Points(occluder.start,occluder.end,epsilon)
+                angOsLs=observer.Angle_Points(occluder.start,self.start,epsilon)
+                angLsOe=observer.Angle_Points(self.start,occluder.end,epsilon)
+                diff=angP1P2-(angOsLs+angLsOe)
+                
+                if abs(diff)<=epsilon:
+                    return None
+                else:
+                    return self
+            else:
+                if pr1 is not None:
+                    return Line(y,self.end)
+                elif pr2 is not None:
+                    return Line(self.start,y)
+                else:
+                    return None 
+        else:
+            if y is None:
+                if pr1 is not None:
+                    return Line(z,self.end)
+                elif pr2 is not None:
+                    return Line(self.start,z)
+                else:
+                    return None
+            else:
+                return [Line(self.start,z),Line(y,self.end)]
+
+    def vs_Sect(self,sectors,ref,epsilon=0.001)->list:
+        temp1=[]
+        temp2=[self]
+        for s in sectors:
+            temp1=temp2
+            temp2=[]
+            for i in temp1:
+                rez=i.Visibility(s,ref,epsilon)
+                if rez is not None:
+                    temp2.extend(rez)
+        return temp2
+
 def Find_Connected_Lines(lines:list,epsilon=0.001)->tuple:
     for line in lines:
         for line1 in lines:
@@ -179,6 +263,9 @@ def Connect_Lines(lines:list,epsilon=0.001)->list:
         lines1.remove(r[2])
         lines1.append(r[0])
     return lines1
+
+
+
 
 
 
