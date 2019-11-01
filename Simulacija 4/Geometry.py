@@ -1,3 +1,5 @@
+from math import pi
+
 class Point:
     x=0
     y=0
@@ -81,6 +83,13 @@ class Line:
         p2=Point(round(p2()[0],SignificantDigits),round(p2()[1],SignificantDigits))
         return Line(p1,p2)
 
+    def To_Tuple(self):
+        x0=self.start.x
+        y0=self.start.y
+        x1=self.end.x
+        y1=self.end.y
+        return((x0,y0),(x1,y1))
+
     def Lenght(self)->float:
         import math
         return(
@@ -132,7 +141,182 @@ class Line:
                 )
                 )
 
-    def Intercept_Segment2(self,Line2,epsilon=0.001):
+    def Intercept_Line2(self,Line2,epsilon=0.001)->Point:
+        line1=(self.start(),self.end())
+        line2=(Line2.start(),Line2.end())
+
+        xdiff = (line1[0][0] - line1[1][0], line2[0][0] - line2[1][0])
+        ydiff = (line1[0][1] - line1[1][1], line2[0][1] - line2[1][1])
+
+        def det(a, b):
+            return a[0] * b[1] - a[1] * b[0]
+
+        div = det(xdiff, ydiff)
+
+        if abs(div) <= epsilon:
+            return None
+        else:
+            d = (det(*line1), det(*line2))
+            x = det(d, xdiff) / div
+            y = det(d, ydiff) / div
+            return Point(x, y)
+
+    def Intercept_Segment2(self,Line1,epsilon=0.001):
+        p=self.Intercept_Line2(Line1,epsilon)
+        if p:
+            if self.On_Line(p) and Line1.On_Line(p):
+                return p
+            else:
+                return None
+        else: 
+            return None
+
+    def Intercept_Segment_Line(self,Line1,epsilon=0.001):
+        p=self.Intercept_Line2(Line1,epsilon)
+        if p:
+            if self.On_Line(p):
+                return p
+            else:
+                return None
+        else: 
+            return None
+
+    def Distance_To_Point(self,p,epsilon=0.001)->float:
+        from numpy import arccos, array, dot, pi, cross
+        from numpy.linalg import det, norm
+        
+        A=array([self.start.x,self.start.y])
+        B=array([self.end.x,self.end.y])
+        P=array([p.x,p.y])
+
+        if all(abs(A-P)<=epsilon) or all(abs(B-P)<=epsilon):
+            return 0
+        if arccos(dot((P - A) / norm(P - A), (B - A) / norm(B - A))) > pi / 2:
+            return norm(P - A)
+        if arccos(dot((P - B) / norm(P - B), (A - B) / norm(A - B))) > pi / 2:
+            return norm(P - B)
+        return norm(cross(A-B, A-P))/norm(B-A)
+
+    def Line_if_Touching(self,other,epsilon=0.001):
+        if self.end.Match(other.start,epsilon):
+            return(Line(self.start,other.end))
+        elif self.start.Match(other.end,epsilon):
+            return(Line(other.start,self.end))
+        else:
+            return None
+
+    def Visibility(self,occluder,observer,epsilon=0.001)->tuple:
+        
+        p1=Line(observer,occluder.start)
+        p2=Line(observer,occluder.end)
+        l1=Line(observer,self.start)
+        l2=Line(observer,self.end)
+        z=self.Intercept_Segment_Line(p1,epsilon)
+        y=self.Intercept_Segment_Line(p2,epsilon)
+        pr1=l1.Intercept_Segment2(occluder,epsilon)
+        pr2=l2.Intercept_Segment2(occluder,epsilon)
+
+        if z is None:
+            if y is None:
+                
+                angP1P2=observer.Angle_Points(occluder.start,occluder.end,epsilon)
+                angOsLs=observer.Angle_Points(occluder.start,self.start,epsilon)
+                angLsOe=observer.Angle_Points(self.start,occluder.end,epsilon)
+                diff=angP1P2-(angOsLs+angLsOe)
+                
+                if abs(diff)<=epsilon:
+                    return None
+                else:
+                    return self
+            else:
+                if pr1 is not None:
+                    return [Line(y,self.end)]
+                elif pr2 is not None:
+                    return [Line(self.start,y)]
+                else:
+                    return None 
+        else:
+            if y is None:
+                if pr1 is not None:
+                    return [Line(z,self.end)]
+                elif pr2 is not None:
+                    return [Line(self.start,z)]
+                else:
+                    return None
+            else:
+                return [Line(self.start,z),Line(y,self.end)]
+
+    def vs_Sect(self,sectors,ref,epsilon=0.001)->list:
+        temp1=[]
+        temp2=[self]
+        for s in sectors:
+            temp1=temp2
+            temp2=[]
+            for i in temp1:
+                rez=i.Visibility(s,ref,epsilon)
+                if rez is not None:
+                    for r in rez:
+                        if r.Lenght()>=epsilon:
+                            temp2.extend([r])
+        return temp2
+
+def Find_Connected_Lines(lines:list,epsilon=0.001)->tuple:
+    for line in lines:
+        for line1 in lines:
+            if line is not line1:
+                newline=line.Line_if_Touching(line1,epsilon)
+                if newline:
+                    return((newline,line,line1))
+
+def Connect_Lines(lines:list,epsilon=0.001)->list:
+    lines1=lines
+    while Find_Connected_Lines(lines1,epsilon):
+        r=Find_Connected_Lines(lines1,epsilon)
+        lines1.remove(r[1])
+        lines1.remove(r[2])
+        lines1.append(r[0])
+    return lines1
+
+def Circle(p=0,q=0,r=1,n=100,start=0*pi,end=2*pi,increment=1/4*pi,SignificantDigits=6)->list:
+    from math import pi,cos,sin
+    import numpy
+    lines=[]
+    for i in numpy.arange(start,end,increment):
+        t0=round(Point(r*cos(i)+p,r*sin(i)+q),SignificantDigits)
+        t1=round(Point(r*cos(i+increment)+p,r*sin(i+increment)+q),SignificantDigits)
+        l=Line(t0,t1)
+        lines.append(l)
+    return lines
+
+def Graph(data):
+    from PIL import Image
+    from PIL import ImageDraw
+    import numpy as np
+    import matplotlib.pyplot as plt
+
+    s = (500, 500)
+
+    im = Image.new('RGB', s, (0,0,0))
+    draw = ImageDraw.Draw(im)
+    for d in data:
+        draw.line(((d.start.x,d.end.x),(d.start.y,d.end.y)), width=1)    
+
+    plt.imshow(np.asarray(im),origin='lower')
+    plt.show()
+
+    
+    
+
+    
+
+
+
+
+
+
+
+"""
+        def Intercept_Segment2(self,Line2,epsilon=0.001):
         k1=self.k
         k2=Line2.k
         n1=self.n
@@ -169,100 +353,7 @@ class Line:
                 return None
         else:
             return None
-
-    def Distance_To_Point(self,p,epsilon=0.001)->float:
-        from numpy import arccos, array, dot, pi, cross
-        from numpy.linalg import det, norm
-        
-        A=array([self.start.x,self.start.y])
-        B=array([self.end.x,self.end.y])
-        P=array([p.x,p.y])
-
-        if all(abs(A-P)<=epsilon) or all(abs(B-P)<=epsilon):
-            return 0
-        if arccos(dot((P - A) / norm(P - A), (B - A) / norm(B - A))) > pi / 2:
-            return norm(P - A)
-        if arccos(dot((P - B) / norm(P - B), (A - B) / norm(A - B))) > pi / 2:
-            return norm(P - B)
-        return norm(cross(A-B, A-P))/norm(B-A)
-
-    def Line_if_Touching(self,other,epsilon=0.001):
-        if self.end.Match(other.start,epsilon):
-            return(Line(self.start,other.end))
-        elif self.start.Match(other.end,epsilon):
-            return(Line(other.start,self.end))
-        else:
-            return None
-
-    def Visibility(self,occluder,observer,epsilon=0.001)->tuple:
-        
-        p1=Line(observer,occluder.start)
-        p2=Line(observer,occluder.end)
-        l1=Line(observer,self.start)
-        l2=Line(observer,self.end)
-        z=self.Intercept_Segment_Line(p1,epsilon)
-        y=self.Intercept_Segment_Line(p2,epsilon)
-        pr1=l1.Intercept_Segment_Line(occluder,epsilon)
-        pr2=l2.Intercept_Segment_Line(occluder,epsilon)
-
-        if z is None:
-            if y is None:
-                
-                angP1P2=observer.Angle_Points(occluder.start,occluder.end,epsilon)
-                angOsLs=observer.Angle_Points(occluder.start,self.start,epsilon)
-                angLsOe=observer.Angle_Points(self.start,occluder.end,epsilon)
-                diff=angP1P2-(angOsLs+angLsOe)
-                
-                if abs(diff)<=epsilon:
-                    return None
-                else:
-                    return self
-            else:
-                if pr1 is not None:
-                    return Line(y,self.end)
-                elif pr2 is not None:
-                    return Line(self.start,y)
-                else:
-                    return None 
-        else:
-            if y is None:
-                if pr1 is not None:
-                    return Line(z,self.end)
-                elif pr2 is not None:
-                    return Line(self.start,z)
-                else:
-                    return None
-            else:
-                return [Line(self.start,z),Line(y,self.end)]
-
-    def vs_Sect(self,sectors,ref,epsilon=0.001)->list:
-        temp1=[]
-        temp2=[self]
-        for s in sectors:
-            temp1=temp2
-            temp2=[]
-            for i in temp1:
-                rez=i.Visibility(s,ref,epsilon)
-                if rez is not None:
-                    temp2.extend(rez)
-        return temp2
-
-def Find_Connected_Lines(lines:list,epsilon=0.001)->tuple:
-    for line in lines:
-        for line1 in lines:
-            if line is not line1:
-                newline=line.Line_if_Touching(line1,epsilon)
-                if newline:
-                    return((newline,line,line1))
-
-def Connect_Lines(lines:list,epsilon=0.001)->list:
-    lines1=lines
-    while Find_Connected_Lines(lines1,epsilon):
-        r=Find_Connected_Lines(lines1,epsilon)
-        lines1.remove(r[1])
-        lines1.remove(r[2])
-        lines1.append(r[0])
-    return lines1
+"""
 
 
 
