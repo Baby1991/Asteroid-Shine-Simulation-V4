@@ -1,4 +1,7 @@
-﻿Kriva sjaja jeste funkcija po kojoj se figuriše intenzitet sjaja nekog osvjetljenog tela tokom
+﻿
+Krive sjaja kompleksnih asteroida
+
+Kriva sjaja jeste funkcija po kojoj se figuriše intenzitet sjaja nekog osvjetljenog tela tokom
 vremena. Razlikuje se u zavisnosti od oblika tela koje se posmatra ali i relativnog kretanja izvora
 svetlosti i tačke iz koje se to telo posmatra.
 Primarna ideja projekta je predstavljala simulaciju nekog dvodimenzionalnog objekta iz čije
