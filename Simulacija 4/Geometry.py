@@ -108,7 +108,7 @@ class Line:
                 )
             )
 
-    def On_Line(self,p,epsilon=0.001)->bool:
+    def On_Line(self,p:Point,epsilon=0.001)->bool:
         return self.start.Distance(p)+self.end.Distance(p)-self.start.Distance(self.end)<=epsilon
     
     def Angle_Of_Slope(self)->float:
@@ -140,10 +140,13 @@ class Line:
                 )
                 )
                 )
+    
+    def Check_S_E_Match(self,epsilon=0.001):
+        return self.start.Match(self.end,epsilon)
 
-    def Intercept_Line2(self,Line2,epsilon=0.001)->Point:
+    def Intercept_Line2(self,Line1,epsilon=0.001)->Point:
         line1=(self.start(),self.end())
-        line2=(Line2.start(),Line2.end())
+        line2=(Line1.start(),Line1.end())
 
         xdiff = (line1[0][0] - line1[1][0], line2[0][0] - line2[1][0])
         ydiff = (line1[0][1] - line1[1][1], line2[0][1] - line2[1][1])
@@ -161,18 +164,18 @@ class Line:
             y = det(d, ydiff) / div
             return Point(x, y)
 
-    def Intercept_Segment2(self,Line1,epsilon=0.001):
-        p=self.Intercept_Line2(Line1,epsilon)
+    def Intercept_Segment2(self,Line2,epsilon=0.001):
+        p=self.Intercept_Line2(Line2,epsilon)
         if p:
-            if self.On_Line(p) and Line1.On_Line(p):
+            if self.On_Line(p) and Line2.On_Line(p):
                 return p
             else:
                 return None
         else: 
             return None
 
-    def Intercept_Segment_Line(self,Line1,epsilon=0.001):
-        p=self.Intercept_Line2(Line1,epsilon)
+    def Intercept_Segment_Line(self,Line2,epsilon=0.001):
+        p=self.Intercept_Line2(Line2,epsilon)
         if p:
             if self.On_Line(p):
                 return p
@@ -230,35 +233,88 @@ class Line:
                     return self
             else:
                 if pr1 is not None:
-                    return [Line(y,self.end)]
+
+                    if y.Match(self.end,epsilon):
+                        return None
+                    else:
+                        return [Line(y,self.end)]
+
                 elif pr2 is not None:
-                    return [Line(self.start,y)]
+
+                    if y.Match(self.start,epsilon):
+                        return None
+                    else:
+                        return [Line(self.start,y)]
+
                 else:
                     return None 
         else:
             if y is None:
                 if pr1 is not None:
-                    return [Line(z,self.end)]
+
+                    if z.Match(self.end,epsilon):
+                        return None
+                    else:
+                        return [Line(z,self.end)]
+
                 elif pr2 is not None:
-                    return [Line(self.start,z)]
+
+                    if z.Match(self.start,epsilon):
+                        return None
+                    else:
+                        return [Line(z,self.start)]
+
                 else:
                     return None
             else:
-                return [Line(self.start,z),Line(y,self.end)]
 
+                t1=Line(self.start,z)
+                t2=Line(y,self.end)
+
+                t1i=Line(self.start,y)
+                t2i=Line(z,self.end)
+
+                if(
+                (
+                t1.Lenght()
+                +
+                t2.Lenght()
+                )
+                >
+                self.Lenght()-epsilon):
+
+                    if t1i.Check_S_E_Match(epsilon):
+
+                        if t2i.Check_S_E_Match(epsilon):
+                            return None
+                        else:
+                            return [t2i]
+
+                    else:
+
+                        if t2i.Check_S_E_Match(epsilon):
+                            return [t1i]
+                        else:
+                            return [t1i,t2i]
+
+                else:
+
+                    if t1.Check_S_E_Match(epsilon):
+
+                        if t2.Check_S_E_Match(epsilon):
+                            return None
+                        else:
+                            return [t2]
+
+                    else:
+
+                        if t2.Check_S_E_Match(epsilon):
+                            return [t1]
+                        else:
+                            return [t1,t2]
+                    
     def vs_Sect(self,sectors,ref,epsilon=0.001)->list:
-        temp1=[]
-        temp2=[self]
-        for s in sectors:
-            temp1=temp2
-            temp2=[]
-            for i in temp1:
-                rez=i.Visibility(s,ref,epsilon)
-                if rez is not None:
-                    for r in rez:
-                        if r.Lenght()>=epsilon:
-                            temp2.extend([r])
-        return temp2
+        return Lines_vs_Sectors([self],sectors,ref,epsilon)
 
 def Find_Connected_Lines(lines:list,epsilon=0.001)->tuple:
     for line in lines:
@@ -277,7 +333,7 @@ def Connect_Lines(lines:list,epsilon=0.001)->list:
         lines1.append(r[0])
     return lines1
 
-def Circle(p=0,q=0,r=1,n=100,start=0*pi,end=2*pi,increment=1/4*pi,SignificantDigits=6)->list:
+def Circle(p=0,q=0,r=1,start=0*pi,end=2*pi,increment=1/4*pi,SignificantDigits=6)->list:
     from math import pi,cos,sin
     import numpy
     lines=[]
@@ -288,27 +344,49 @@ def Circle(p=0,q=0,r=1,n=100,start=0*pi,end=2*pi,increment=1/4*pi,SignificantDig
         lines.append(l)
     return lines
 
-def Graph(data):
-    from PIL import Image
-    from PIL import ImageDraw
-    import numpy as np
+def Graph(data:list):
     import matplotlib.pyplot as plt
-
-    s = (500, 500)
-
-    im = Image.new('RGB', s, (0,0,0))
-    draw = ImageDraw.Draw(im)
-    for d in data:
-        draw.line(((d.start.x,d.end.x),(d.start.y,d.end.y)), width=1)    
-
-    plt.imshow(np.asarray(im),origin='lower')
+    for l in data:
+        xs=[l.start.x,l.end.x]
+        ys=[l.start.y,l.end.y]
+        plt.plot(xs,ys,linewidth=2,marker=".")
     plt.show()
 
-    
-    
+def Lines_vs_Sect(lines:list,sector,ref,epsilon=0.001)->list:
+    output=[]
+    for line in lines:
+        visible=line.Visibility(sector,ref,epsilon)
+        if visible is not None:
+            output.extend(visible)
+    if len(output)>0:
+        return output
+    else:
+        return None
+
+def Lines_vs_Sectors(lines:list,sectors:list,ref,epsilon=0.001)->list:
+    temp=lines
+    for sect in sectors:
+        temp=Lines_vs_Sect(temp,sect,ref,epsilon)
+        if temp is None:    
+            break
+    return temp
+
+def Visible_Lines_From_Point(lines:list,ref,epsilon=0.001):
+    lines=ref.Sort_Lines_By_Distance(lines)
+    sectors=[lines[0]]
+    visible=[lines[0]]
+    lines.pop(0)
+    for line in lines:
+        temp=line.vs_Sect(sectors,ref,epsilon)
+        if temp:
+            sectors.extend(temp)
+            visible.extend(temp)
+            sectors=Connect_Lines(sectors,epsilon)
+    return visible
+
+
 
     
-
 
 
 

@@ -4,13 +4,13 @@ from Geometry import *
 
 linije=[]
 step=pi/10
-ref=Point(2,0)
+ref=Point(10,0)
 
-sect=Circle(start=-pi/2,end=pi/2,increment=pi/2)
+refl=Line(ref,ref)
 
-l1=Line(Point(-1,2),Point(-1,-2))
-l2=Line(Point(0,2),Point(0,-2))
+lines=Circle(start=-pi/2,end=pi/2,increment=pi/4)
 
-lines=l1.vs_Sect(sect,ref)
-print(lines)
-Graph(lines)
+plot=Visible_Lines_From_Point(lines,ref)
+plot.append(refl)
+Graph(plot)
+
