@@ -346,6 +346,7 @@ def Circle(p=0,q=0,r=1,start=0*pi,end=2*pi,increment=1/4*pi,SignificantDigits=6)
 
 def Graph(data:list):
     import matplotlib.pyplot as plt
+    plt.figure()
     for l in data:
         xs=[l.start.x,l.end.x]
         ys=[l.start.y,l.end.y]
