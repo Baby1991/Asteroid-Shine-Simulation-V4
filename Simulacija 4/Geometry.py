@@ -201,12 +201,50 @@ class Line:
         return norm(cross(A-B, A-P))/norm(B-A)
 
     def Line_if_Touching(self,other,epsilon=0.001):
-        if self.end.Match(other.start,epsilon):
-            return(Line(self.start,other.end))
-        elif self.start.Match(other.end,epsilon):
-            return(Line(other.start,self.end))
+        
+        if(
+            (
+            self.start.Match(other.end,epsilon)
+            and
+            self.end.Match(other.start,epsilon)
+            )
+            or
+            (
+            self.start.Match(other.start,epsilon)
+            and
+            self.end.Match(other.end,epsilon)
+            )
+        ):
+
+            return Line(self.start,self.end)
+        
+        elif(
+            self.start.Match(other.start,epsilon)
+        ):
+
+            return Line(self.end,other.end)
+
+        elif(
+            self.start.Match(other.end,epsilon)
+        ):
+
+            return Line(self.end,other.start)
+
+        elif(
+            self.end.Match(other.start,epsilon)
+        ):
+
+            return Line(self.start,other.end)
+
+        elif(
+            self.end.Match(other.end,epsilon)
+        ):
+
+            return Line(self.start,other.start)
+
         else:
             return None
+
 
     def Visibility(self,occluder,observer,epsilon=0.001)->tuple:
         
