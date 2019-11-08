@@ -353,13 +353,38 @@ class Line:
         return Lines_vs_Sectors([self],sectors,ref,epsilon)
 
 class Graph:
-    from matplotlib.pyplot import *
+    
+    def __init__(self,x=7,y=7):
+        from matplotlib.pyplot import figure
+        self.fig=figure(figsize=(x,y))
+        self.ax=self.fig.gca()
 
-    def __init__(self):
-        
+    def Point(self,p,color="black",marker="o"):
+        from matplotlib.pyplot import plot,figure,gca
+        self.ax.plot(p.x,p.y,marker=marker,color=color)
 
+    def Line(self,line,color="black",linewidth=2,marker="."):
+        from matplotlib.pyplot import plot,figure,gca
+        xs=[line.start.x,line.end.x]
+        ys=[line.start.y,line.end.y]
+        self.ax.plot(xs,ys,linewidth=linewidth,marker=marker,color=color)
 
+    def Lines(self,lines:list,color="black",linewidth=2,marker="."):
+        from matplotlib.pyplot import plot,figure,gca
+        for l in lines:
+            xs=[l.start.x,l.end.x]
+            ys=[l.start.y,l.end.y]
+            self.ax.plot(xs,ys,linewidth=linewidth,marker=marker,color=color)
 
+    def Save(self,name,path="",extenstion="png"):
+        from matplotlib.pyplot import savefig
+        import os
+        saveFile=os.path.join(path,name)+"."+extenstion
+        self.fig.savefig(saveFile)
+
+    def Show():
+        from matplotlib.pyplot import show
+        show()
 
 def Find_Connected_Lines(lines:list,epsilon=0.001)->tuple:
     for line in lines:
@@ -388,15 +413,6 @@ def Circle(p=0,q=0,r=1,start=0*pi,end=2*pi,increment=1/4*pi,SignificantDigits=6)
         l=Line(t0,t1)
         lines.append(l)
     return lines
-
-def Graph(data:list,color="r"):
-    import matplotlib.pyplot as plt
-    plt.figure()
-    for l in data:
-        xs=[l.start.x,l.end.x]
-        ys=[l.start.y,l.end.y]
-        plt.plot(xs,ys,linewidth=2,marker=".")
-    plt.show()
 
 def Lines_vs_Sect(lines:list,sector,ref,epsilon=0.001)->list:
     output=[]
@@ -432,7 +448,6 @@ def Visible_Lines_From_Point(lines:list,ref,epsilon=0.001):
 
 
 
-    
 
 
 
