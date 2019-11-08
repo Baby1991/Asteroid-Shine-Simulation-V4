@@ -245,9 +245,7 @@ class Line:
         else:
             return None
 
-
     def Visibility(self,occluder,observer,epsilon=0.001)->tuple:
-        
         p1=Line(observer,occluder.start)
         p2=Line(observer,occluder.end)
         l1=Line(observer,self.start)
@@ -354,6 +352,15 @@ class Line:
     def vs_Sect(self,sectors,ref,epsilon=0.001)->list:
         return Lines_vs_Sectors([self],sectors,ref,epsilon)
 
+class Graph:
+    from matplotlib.pyplot import *
+
+    def __init__(self):
+        
+
+
+
+
 def Find_Connected_Lines(lines:list,epsilon=0.001)->tuple:
     for line in lines:
         for line1 in lines:
@@ -382,7 +389,7 @@ def Circle(p=0,q=0,r=1,start=0*pi,end=2*pi,increment=1/4*pi,SignificantDigits=6)
         lines.append(l)
     return lines
 
-def Graph(data:list):
+def Graph(data:list,color="r"):
     import matplotlib.pyplot as plt
     plt.figure()
     for l in data:
