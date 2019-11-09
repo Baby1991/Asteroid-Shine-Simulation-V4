@@ -1,4 +1,4 @@
-from Asteroid_Geometry.Geometry import *
+from Geometry import *
 
 from math import pi,cos,sin
 import numpy
