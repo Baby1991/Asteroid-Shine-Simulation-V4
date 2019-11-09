@@ -1,5 +1,7 @@
 #Geometry for Asteroid Shine Simulation
 
+from math import pi
+
 class Point:
     x=0
     y=0
@@ -446,69 +448,3 @@ def Visible_Lines_From_Point(lines:list,ref,epsilon=0.001):
             visible.extend(temp)
             sectors=Connect_Lines(sectors,epsilon)
     return visible
-
-
-
-
-
-"""
-        def Intercept_Segment2(self,Line2,epsilon=0.001):
-        k1=self.k
-        k2=Line2.k
-        n1=self.n
-        n2=Line2.n
-        if abs(k1-k2)>epsilon:
-            x=(n2-n1)/(k1-k2)
-            y=k1*x+n1
-            p=Point(x,y)
-            if( 
-            self.On_Line(p)
-            and
-            Line2.On_Line(p)
-            ):
-                return p
-            else:
-                return None
-        else:
-            return None
-
-    def Intercept_Segment_Line(self,Line1,epsilon=0.001):
-        k1=self.k
-        k2=Line1.k
-        n1=self.n
-        n2=Line1.n
-        if abs(k1-k2)>epsilon:
-            x=(n2-n1)/(k1-k2)
-            y=k1*x+n1
-            p=Point(x,y)
-            if( 
-            self.On_Line(p)
-            ):
-                return p
-            else:
-                return None
-        else:
-            return None
-"""
-
-
-
-
-
-
-    
-
-    
-
-
-    
-        
-        
-
-
-
-
-
-
-
-    

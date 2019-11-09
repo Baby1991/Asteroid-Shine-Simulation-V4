@@ -1,17 +1,20 @@
 
 from Geometry import *
-
 from math import pi,cos,sin
 import numpy
 
-lines=Circle(start=0,end=2*pi,increment=pi/4)
+ref=Point(5,0)
+occluder=Line(Point(0,5),Point(0,3))
+linija=Line(Point(-2,2),Point(-2,-2))
 
-for i in numpy.arange(0,2*pi,pi/4):
-    ref=Point(5*cos(i),5*sin(i))
-    plot1=Graph()
-    plot1.Lines(Visible_Lines_From_Point(lines,ref))
-    plot1.Point(ref)
-    Graph.Show()
+plot=Graph()
+plot.Line(linija,color="red",marker="o")
+visible=linija.Visibility(occluder,ref)
+if visible:
+    plot.Lines(visible,color="blue")
+plot.Line(occluder)
+plot.Point(ref)
+Graph.Show()
 
 
 
