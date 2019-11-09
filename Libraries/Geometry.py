@@ -1,4 +1,4 @@
-from math import pi
+#Geometry for Asteroid Shine Simulation
 
 class Point:
     x=0
@@ -360,17 +360,17 @@ class Graph:
         self.ax=self.fig.gca()
 
     def Point(self,p,color="black",marker="o"):
-        from matplotlib.pyplot import plot,figure,gca
+        from matplotlib.pyplot import plot
         self.ax.plot(p.x,p.y,marker=marker,color=color)
 
     def Line(self,line,color="black",linewidth=2,marker="."):
-        from matplotlib.pyplot import plot,figure,gca
+        from matplotlib.pyplot import plot
         xs=[line.start.x,line.end.x]
         ys=[line.start.y,line.end.y]
         self.ax.plot(xs,ys,linewidth=linewidth,marker=marker,color=color)
 
     def Lines(self,lines:list,color="black",linewidth=2,marker="."):
-        from matplotlib.pyplot import plot,figure,gca
+        from matplotlib.pyplot import plot
         for l in lines:
             xs=[l.start.x,l.end.x]
             ys=[l.start.y,l.end.y]
@@ -385,6 +385,7 @@ class Graph:
     def Show():
         from matplotlib.pyplot import show
         show()
+
 
 def Find_Connected_Lines(lines:list,epsilon=0.001)->tuple:
     for line in lines:

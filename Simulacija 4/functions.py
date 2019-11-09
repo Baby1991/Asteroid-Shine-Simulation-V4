@@ -1,19 +1,23 @@
 
 from Geometry import *
 
+from math import pi,cos,sin
+import numpy
 
-linije=[]
-step=pi/10
-ref=Point(0,2)
-refl=Line(ref,ref)
+lines=Circle(start=0,end=2*pi,increment=pi/4)
 
-plot1=Graph()
-plot=Graph()
+for i in numpy.arange(0,2*pi,pi/4):
+    ref=Point(5*cos(i),5*sin(i))
+    plot1=Graph()
+    plot1.Lines(Visible_Lines_From_Point(lines,ref))
+    plot1.Point(ref)
+    Graph.Show()
 
-lines=Circle(start=0,end=2*pi,increment=pi/2)
-plot.Lines(lines,color="red")
-plot1.Lines(Visible_Lines_From_Point(lines,ref))
-plot.Save("filip")
+
+
+
+
+
 
 
 
