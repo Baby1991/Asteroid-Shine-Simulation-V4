@@ -5,13 +5,13 @@ import numpy
 
 ref=Point(5,0)
 
-lines=Circle(increment=pi/8)
-
-visible=Visible_Lines_From_Point(lines,ref)
-
+line=Line(Point(-1,0),Point(0,1))
+occluder=Line(Point(1,-1),Point(0,0))
 plot=Graph()
-plot.Lines(lines,linewidth=6)
-if visible:
-    plot.Lines(visible,color="red",marker=".",linewidth=3)
+plot.Line(line)
+plot.Line(occluder)
 plot.Point(ref)
+out=line.Visibility(occluder,ref)
+if out:
+    plot.Lines(out,color="red")
 Graph.Show()
