@@ -260,7 +260,12 @@ class Line:
         if z is None:
             if y is None:
                 
-                angP1P2=observer.Angle_Points(occluder.start,occluder.end,epsilon)
+                if pr1 and pr2:
+                    return None
+                else:
+                    return [self]
+
+                """angP1P2=observer.Angle_Points(occluder.start,occluder.end,epsilon)   10.11.2019
                 angOsLs=observer.Angle_Points(occluder.start,self.start,epsilon)
                 angLsOe=observer.Angle_Points(self.start,occluder.end,epsilon)
                 diff=angP1P2-(angOsLs+angLsOe)
@@ -268,7 +273,7 @@ class Line:
                 if abs(diff)<=epsilon:
                     return None
                 else:
-                    return self
+                    return self"""
             else:
                 if pr1 is not None:
 
