@@ -441,12 +441,13 @@ def Lines_vs_Sectors(lines:list,sectors:list,ref,epsilon=0.001)->list:
     return temp
 
 def Visible_Lines_From_Point(lines:list,ref,epsilon=0.001):
-    plot=Graph()
+    
     lines=ref.Sort_Lines_By_Distance(lines) #dobro
     sectors=[lines[0]] #dobro
     visible=[lines[0]] #dobro
     lines.pop(0) #dobro
 
+    plot=Graph()
     plot.Lines(lines,linewidth=7)
     plot.Lines(sectors,color="blue",linewidth=5)
     plot.Lines(visible,color="red",linewidth=2)
@@ -467,10 +468,25 @@ def Visible_Lines_From_Point(lines:list,ref,epsilon=0.001):
 
         sectors=ref.Sort_Lines_By_Distance(sectors) #dobro
 
+        plot.Lines(lines,linewidth=7)
+        plot.Lines(sectors,color="blue",linewidth=5)
+        plot.Lines(visible,color="red",linewidth=2)
+        plot.Line(line,color="green")
+        plot.Point(ref)
+        Graph.Show()
+
         temp=line.vs_Sect(sectors,ref,epsilon) #dobro
 
         if temp:
             sectors.extend(temp)
             visible.extend(temp)
+
+            plot.Lines(lines,linewidth=7)
+            plot.Lines(sectors,color="blue",linewidth=5)
+            plot.Lines(visible,color="red",linewidth=2)
+            plot.Line(line,color="green")
+            plot.Lines(temp,color="cyan",linewidth=5)
+            plot.Point(ref)
+            Graph.Show()
 
     return visible
