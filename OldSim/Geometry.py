@@ -393,7 +393,6 @@ class Graph:
         from matplotlib.pyplot import show
         show()
 
-
 def Find_Connected_Lines(lines:list,epsilon=0.001)->tuple:
     for line in lines:
         for line1 in lines:
@@ -442,14 +441,22 @@ def Lines_vs_Sectors(lines:list,sectors:list,ref,epsilon=0.001)->list:
     return temp
 
 def Visible_Lines_From_Point(lines:list,ref,epsilon=0.001):
-    lines=ref.Sort_Lines_By_Distance(lines)
-    sectors=[lines[0]]
-    visible=[lines[0]]
-    lines.pop(0)
+    
+    lines=ref.Sort_Lines_By_Distance(lines) #dobro
+    sectors=[lines[0]] #dobro
+    visible=[lines[0]] #dobro
+    lines.pop(0) #dobro
+    
     for line in lines:
-        temp=line.vs_Sect(sectors,ref,epsilon)
+
+        sectors=Connect_Lines(sectors,epsilon)
+
+        sectors=ref.Sort_Lines_By_Distance(sectors) #dobro
+
+        temp=line.vs_Sect(sectors,ref,epsilon) #dobro
+
         if temp:
             sectors.extend(temp)
             visible.extend(temp)
-            sectors=Connect_Lines(sectors,epsilon)
+
     return visible
