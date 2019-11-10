@@ -202,6 +202,12 @@ class Line:
             return norm(P - B)
         return norm(cross(A-B, A-P))/norm(B-A)
 
+    def Return_Not_Match(self,epsilon=0.001)->list:
+        if self.start.Match(self.end,epsilon):
+            return None
+        else:
+            return self
+
     def Line_if_Touching(self,other,epsilon=0.001):
         
         if(
@@ -275,37 +281,33 @@ class Line:
                 else:
                     return self"""
             else:
-                if pr1 is not None:
 
-                    if y.Match(self.end,epsilon):
-                        return None
-                    else:
-                        return [Line(y,self.end)]
+                if pr1 and p2:
+                    return None
+
+                elif pr1 is not None:
+
+                    return [Line(y,self.end)]
 
                 elif pr2 is not None:
 
-                    if y.Match(self.start,epsilon):
-                        return None
-                    else:
-                        return [Line(self.start,y)]
+                    return [Line(self.start,y)]
 
                 else:
                     return None 
         else:
             if y is None:
-                if pr1 is not None:
 
-                    if z.Match(self.end,epsilon):
-                        return None
-                    else:
-                        return [Line(z,self.end)]
+                if pr1 and pr2:
+                    return None
+
+                elif pr1 is not None:
+
+                    return [Line(z,self.end)]
 
                 elif pr2 is not None:
 
-                    if z.Match(self.start,epsilon):
-                        return None
-                    else:
-                        return [Line(z,self.start)]
+                    return [Line(z,self.start)]
 
                 else:
                     return None
@@ -326,35 +328,10 @@ class Line:
                 >
                 self.Lenght()-epsilon):
 
-                    if t1i.Check_S_E_Match(epsilon):
-
-                        if t2i.Check_S_E_Match(epsilon):
-                            return None
-                        else:
-                            return [t2i]
-
-                    else:
-
-                        if t2i.Check_S_E_Match(epsilon):
-                            return [t1i]
-                        else:
-                            return [t1i,t2i]
+                    return [t1i,t2i]
 
                 else:
-
-                    if t1.Check_S_E_Match(epsilon):
-
-                        if t2.Check_S_E_Match(epsilon):
-                            return None
-                        else:
-                            return [t2]
-
-                    else:
-
-                        if t2.Check_S_E_Match(epsilon):
-                            return [t1]
-                        else:
-                            return [t1,t2]
+                    return [t1,t2]
                     
     def vs_Sect(self,sectors,ref,epsilon=0.001)->list:
         return Lines_vs_Sectors([self],sectors,ref,epsilon)
@@ -393,6 +370,21 @@ class Graph:
         from matplotlib.pyplot import show
         show()
 
+
+def Lines_Not_Matching(lines:list,epsilon=0.001)->list:
+    output=[]
+    if lines is not None:
+        for line in lines:
+            if line.Return_Not_Match(epsilon) is not None:
+                output.append(line)
+
+        if len(output)>0:
+            return output
+        else:
+            return None
+    else:
+        return None
+
 def Find_Connected_Lines(lines:list,epsilon=0.001)->tuple:
     for line in lines:
         for line1 in lines:
@@ -424,7 +416,7 @@ def Circle(p=0,q=0,r=1,start=0*pi,end=2*pi,increment=1/4*pi,SignificantDigits=6)
 def Lines_vs_Sect(lines:list,sector,ref,epsilon=0.001)->list:
     output=[]
     for line in lines:
-        visible=line.Visibility(sector,ref,epsilon)
+        visible=Lines_Not_Matching(line.Visibility(sector,ref,epsilon),epsilon)
         if visible is not None:
             output.extend(visible)
     if len(output)>0:
@@ -447,46 +439,39 @@ def Visible_Lines_From_Point(lines:list,ref,epsilon=0.001):
     visible=[lines[0]] #dobro
     lines.pop(0) #dobro
 
-    plot=Graph()
+    """plot=Graph()
     plot.Lines(lines,linewidth=7)
     plot.Lines(sectors,color="blue",linewidth=5)
     plot.Lines(visible,color="red",linewidth=2)
     plot.Point(ref)
-    Graph.Show()
+    Graph.Show()"""
 
     for line in lines:
 
-        plot=Graph()
+        """plot=Graph()
         plot.Lines(lines,linewidth=7)
         plot.Lines(sectors,color="blue",linewidth=5)
         plot.Lines(visible,color="red",linewidth=2)
         plot.Line(line,color="green")
         plot.Point(ref)
-        Graph.Show()
+        Graph.Show()"""
 
         sectors=Connect_Lines(sectors,epsilon)
 
         sectors=ref.Sort_Lines_By_Distance(sectors) #dobro
 
+        """plot=Graph()
         plot.Lines(lines,linewidth=7)
         plot.Lines(sectors,color="blue",linewidth=5)
         plot.Lines(visible,color="red",linewidth=2)
         plot.Line(line,color="green")
         plot.Point(ref)
-        Graph.Show()
+        Graph.Show()"""
 
         temp=line.vs_Sect(sectors,ref,epsilon) #dobro
 
-        if temp:
+        if temp is not None:
             sectors.extend(temp)
             visible.extend(temp)
-
-            plot.Lines(lines,linewidth=7)
-            plot.Lines(sectors,color="blue",linewidth=5)
-            plot.Lines(visible,color="red",linewidth=2)
-            plot.Line(line,color="green")
-            plot.Lines(temp,color="cyan",linewidth=5)
-            plot.Point(ref)
-            Graph.Show()
 
     return visible
