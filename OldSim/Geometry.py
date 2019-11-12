@@ -397,11 +397,12 @@ class Line:
         from math import cos
         incline=min(self.Closer_Angle(p,illuminator),pi-self.Closer_Angle(p,illuminator))
         deflection=min(self.Closer_Angle(p,observer),pi-self.Closer_Angle(p,observer))
-        return(
+        """return(
         (cos(incline)*cos(deflection))
         /
         (cos(incline)+cos(deflection))
-        )
+        )"""
+        return 1
 
     def Line_Shine(self,observer,illuminator,Density:float=100,albedo=1)->float:
         points=self.Inerpolate(Density)
@@ -632,12 +633,31 @@ def Shine(packets:list,Density:float=100):
         print_progress_bar(step,maxSteps,prefix="\tLine Shine: ",suffix="\t"+str(Time_Left(start,time.time(),step,maxSteps)),message=("\tShine Finished, Elapsed Time="+str(round(time.time()-start,1))))
     return shines
 
+def SaveData(data:list,name:str,path:str=""):
+    import os,pickle
+    saveFile=os.path.join(path,name)+".data"
+    with open(saveFile,'wb') as filehandle:
+        pickle.dump(data,filehandle)
+    print("\tData written to:\t"+saveFile)
+
+def LoadData(name:str,path:str="")->list:
+    import os,pickle
+    loadFile=os.path.join(path,name)+".data"
+    with open(loadFile,'rb') as filehandle:
+        data=pickle.load(filehandle)
+    print("\tData loaded from:\t"+loadFile)
+    return data
+
 def EndToEnd(lines:list,increment=pi/2,Density:float=100,epsilon=0.001)->float:  
+    
     visible=Test_Lines(lines,phase=pi/2,increment=increment,epsilon=epsilon)
+
+    SaveData(visible,"visible")
+    
     shines=Shine(visible,Density)
-    plot=Graph()
-    plot.Values(shines)
-    Graph.Show()
+
+    SaveData(shines,"shines")
+
     print("\tEnd To End done")
     return shines
     
