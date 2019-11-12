@@ -525,40 +525,23 @@ def Visible_Lines_From_Point(lines:list,ref,epsilon=0.001):
     visible=[lines[0]] #dobro
     lines.pop(0) #dobro
 
-    """plot=Graph()
-    plot.Lines(lines,linewidth=7)
-    plot.Lines(sectors,color="blue",linewidth=5)
-    plot.Lines(visible,color="red",linewidth=2)
-    plot.Point(ref)
-    Graph.Show()"""
-
     for line in lines:
-
-        """plot=Graph()
-        plot.Lines(lines,linewidth=7)
-        plot.Lines(sectors,color="blue",linewidth=5)
-        plot.Lines(visible,color="red",linewidth=2)
-        plot.Line(line,color="green")
-        plot.Point(ref)
-        Graph.Show()"""
 
         sectors=Connect_Lines(sectors,epsilon)
 
         sectors=ref.Sort_Lines_By_Distance(sectors) #dobro
-
-        """plot=Graph()
-        plot.Lines(lines,linewidth=7)
-        plot.Lines(sectors,color="blue",linewidth=5)
-        plot.Lines(visible,color="red",linewidth=2)
-        plot.Line(line,color="green")
-        plot.Point(ref)
-        Graph.Show()"""
 
         temp=line.vs_Sect(sectors,ref,epsilon) #dobro
 
         if temp is not None:
             sectors.extend(temp)
             visible.extend(temp)
+
+    plot=Graph(15,5)
+    plot.Lines(lines,linewidth=5)
+    plot.Lines(visible,color="red")
+    plot.Point(ref)
+    Graph.Show()
 
     return visible
 
@@ -572,7 +555,9 @@ def And_Lines(lines1:list,lines2:list,epsilon=0.001):
     return output
 
 def Visible_Line_From_Both_Points(lines:list,p1,p2,epsilon=0.001):
-    return And_Lines(Visible_Lines_From_Point(lines,p1,epsilon),Visible_Lines_From_Point(lines,p2,epsilon),epsilon)
+    visible1=Visible_Lines_From_Point(lines,p1,epsilon)
+    visible2=Visible_Lines_From_Point(lines,p2,epsilon)
+    return And_Lines(visible1,visible2,epsilon)
 
 def print_progress_bar(iteration, total, prefix='', suffix='', decimals=1, length=100, fill='█',message=''):
     percent = ("{0:." + str(decimals) + "f}").format(100 *
@@ -617,7 +602,8 @@ def Lines_Shine(packet:tuple,Density:float=100):
     (lines,observer,illuminator)=packet
     shine=0
     for line in lines:
-        shine+=line.Line_Shine(observer,illuminator,Density)
+        #shine+=line.Line_Shine(observer,illuminator,Density)
+        shine+=line.Lenght()
     return shine
 
 def Shine(packets:list,Density:float=100):
