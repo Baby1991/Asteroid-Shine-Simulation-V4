@@ -59,6 +59,12 @@ class Point:
         from math import sqrt
         return sqrt((self.x - p.x)**2 + (self.y - p.y)**2)
 
+    def Closer_Point(self,p1,p2):
+        if self.Distance(p1)<self.Distance(p2):
+            return p1
+        else:
+            return p2
+
 class Line:
     start=Point(0,0)
     end=Point(0,0)
@@ -266,7 +272,7 @@ class Line:
         if z is None:
             if y is None:
                 
-                if pr1 and pr2:
+                if pr1 is not None and pr2 is not None:
                     return None
                 else:
                     return [self]
@@ -282,7 +288,7 @@ class Line:
                     return self"""
             else:
 
-                if pr1 and p2:
+                if pr1 is not None and pr2 is not None:
                     return None
 
                 elif pr1 is not None:
@@ -298,7 +304,7 @@ class Line:
         else:
             if y is None:
 
-                if pr1 and pr2:
+                if pr1 is not None and pr2 is not None:
                     return None
 
                 elif pr1 is not None:
@@ -336,6 +342,75 @@ class Line:
     def vs_Sect(self,sectors,ref,epsilon=0.001)->list:
         return Lines_vs_Sectors([self],sectors,ref,epsilon)
 
+    def And(self,line,epsilon=0.001):
+        if self.On_Line(line.start,epsilon) and self.On_Line(line.end,epsilon):
+            return line.Return_Not_Match(epsilon)
+
+        elif line.On_Line(self.start,epsilon) and line.On_Line(self.end,epsilon):
+            return self.Return_Not_Match(epsilon)
+
+        elif self.On_Line(line.start,epsilon) and line.On_Line(self.start,epsilon):
+            return Line(self.start,line.end).Return_Not_Match(epsilon)
+
+        elif self.On_Line(line.start,epsilon) and line.On_Line(self.start,epsilon):
+            return Line(self.start,line.start).Return_Not_Match(epsilon)
+
+        elif self.On_Line(line.end,epsilon) and line.On_Line(self.end,epsilon):
+            return Line(self.end,line.end).Return_Not_Match(epsilon)
+
+        elif self.On_Line(line.start,epsilon) and line.On_Line(self.end,epsilon):
+            return Line(self.end,line.start).Return_Not_Match(epsilon)
+
+        else:
+            return None
+
+    def Inerpolate(self,Density:float=100)->list:
+        import numpy
+        number_of_points=max(int(Density*self.Lenght()),1)
+        
+        x0=self.start.x
+        y0=self.start.y
+        x1=self.end.x
+        y1=self.end.y
+        k=self.k
+        n=self.n
+        dx=abs(x1-x0)
+        dy=abs(y1-y0)
+        xstep=dx/number_of_points
+        ystep=dy/number_of_points
+        output=[]
+        
+        if ystep>xstep:
+            for y in numpy.arange(min(y0,y1),max(y0,y1)+ystep,ystep):
+                output.append(Point((y-n)/k,y))
+        else:
+            for x in numpy.arange(min(x0,x1),max(x0,x1)+xstep,xstep):
+                output.append(Point(x,k*x+n))
+
+        return output
+
+    def Closer_Angle(self,p1,ref):
+        closer_Point=ref.Closer_Point(self.start,self.end)
+        return abs(p1.Angle_Points(closer_Point,ref))
+
+    def Point_Shine(self,p,observer,illuminator):
+        from math import cos
+        incline=min(self.Closer_Angle(p,illuminator),pi-self.Closer_Angle(p,illuminator))
+        deflection=min(self.Closer_Angle(p,observer),pi-self.Closer_Angle(p,observer))
+        return(
+        (cos(incline)*cos(deflection))
+        /
+        (cos(incline)+cos(deflection))
+        )
+
+    def Line_Shine(self,observer,illuminator,Density:float=100,albedo=1)->float:
+        points=self.Inerpolate(Density)
+        shine=0
+        for p in points:
+            shine+=(albedo*self.Point_Shine(p,observer,illuminator))
+        #shine=shine/Density
+        return shine
+
 class Graph:
     
     def __init__(self,x=7,y=7):
@@ -346,6 +421,11 @@ class Graph:
     def Point(self,p,color="black",marker="o"):
         from matplotlib.pyplot import plot
         self.ax.plot(p.x,p.y,marker=marker,color=color)
+
+    def Points(self,points:list,color="black",marker="o"):
+        from matplotlib.pyplot import plot
+        for p in points:
+            self.ax.plot(p.x,p.y,marker=marker,color=color)
 
     def Line(self,line,color="black",linewidth=2,marker="."):
         from matplotlib.pyplot import plot
@@ -360,6 +440,12 @@ class Graph:
             ys=[l.start.y,l.end.y]
             self.ax.plot(xs,ys,linewidth=linewidth,marker=marker,color=color)
 
+    def Values(self,values:list,color="black",marker="."):
+        import numpy
+        from matplotlib.pyplot import plot
+        x=numpy.arange(len(values))
+        self.ax.plot(x,values,marker=marker,color=color)
+
     def Save(self,name,path="",extenstion="png"):
         from matplotlib.pyplot import savefig
         import os
@@ -369,7 +455,6 @@ class Graph:
     def Show():
         from matplotlib.pyplot import show
         show()
-
 
 def Lines_Not_Matching(lines:list,epsilon=0.001)->list:
     output=[]
@@ -475,3 +560,84 @@ def Visible_Lines_From_Point(lines:list,ref,epsilon=0.001):
             visible.extend(temp)
 
     return visible
+
+def And_Lines(lines1:list,lines2:list,epsilon=0.001):
+    output=[]
+    for line1 in lines1:
+        for line2 in lines2:
+            temp=line1.And(line2,epsilon)
+            if temp:
+                output.append(temp)
+    return output
+
+def Visible_Line_From_Both_Points(lines:list,p1,p2,epsilon=0.001):
+    return And_Lines(Visible_Lines_From_Point(lines,p1,epsilon),Visible_Lines_From_Point(lines,p2,epsilon),epsilon)
+
+def print_progress_bar(iteration, total, prefix='', suffix='', decimals=1, length=100, fill='█',message=''):
+    percent = ("{0:." + str(decimals) + "f}").format(100 *
+                                                     (iteration / float(total)))
+    filledLength = int(length * iteration // total)
+    bar = fill * filledLength + '-' * (length - filledLength)
+    print('\r%s |%s| %s%% %s' % (prefix, bar, percent, suffix), end='\r')
+    if iteration == total:
+        print('\n'+message)
+
+def Time_Left(startTime:float,currentTime:float,step:int,maxSteps:int):
+    passed=currentTime-startTime
+    averageTime=passed/(step+1)
+    return round(averageTime*(maxSteps-step),1)
+
+def Test_Lines(lines:list,phase=pi/2,increment=pi/2,radius=5,epsilon=0.001):
+    import numpy
+    from math import sin,cos
+    import time
+
+    print_progress_bar(0,1,prefix="\tLine Visibility: ")
+    
+    output=[]
+    start=time.time()
+    
+    maxSteps=(2*pi/increment)-1
+
+    for t in numpy.arange(0,2*pi,increment):
+        
+        observer=Point(radius*cos(t),radius*sin(t))
+        illuminator=Point(radius*cos(t+phase),radius*sin(t+phase))
+        visible=Visible_Line_From_Both_Points(lines,observer,illuminator,epsilon)
+        output.append((visible,illuminator,observer))
+
+        step=t/increment
+
+        print_progress_bar(step,maxSteps,prefix="\tLine Visibility: ",suffix="\t"+str(Time_Left(start,time.time(),step,maxSteps)),message=("\tVisibility Finished, Elapsed Time="+str(round(time.time()-start,1))))
+    
+    return (output)
+
+def Lines_Shine(packet:tuple,Density:float=100):
+    (lines,observer,illuminator)=packet
+    shine=0
+    for line in lines:
+        shine+=line.Line_Shine(observer,illuminator,Density)
+    return shine
+
+def Shine(packets:list,Density:float=100):
+    import time
+    shines=[]
+    start=time.time()
+    maxSteps=len(packets)-1
+    print_progress_bar(0,1,prefix="\tLine Shine: ")
+    for l in packets:
+        shines.append(Lines_Shine(l,Density))
+
+        step=packets.index(l)
+        print_progress_bar(step,maxSteps,prefix="\tLine Shine: ",suffix="\t"+str(Time_Left(start,time.time(),step,maxSteps)),message=("\tShine Finished, Elapsed Time="+str(round(time.time()-start,1))))
+    return shines
+
+def EndToEnd(lines:list,increment=pi/2,Density:float=100,epsilon=0.001)->float:  
+    visible=Test_Lines(lines,phase=pi/2,increment=increment,epsilon=epsilon)
+    shines=Shine(visible,Density)
+    plot=Graph()
+    plot.Values(shines)
+    Graph.Show()
+    print("\tEnd To End done")
+    return shines
+    
