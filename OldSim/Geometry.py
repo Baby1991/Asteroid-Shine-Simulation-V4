@@ -209,10 +209,13 @@ class Line:
         return norm(cross(A-B, A-P))/norm(B-A)
 
     def Return_Not_Match(self,epsilon=0.001)->list:
-        if self.start.Match(self.end,epsilon):
-            return None
+        if self is not None:
+            if self.start.Match(self.end,epsilon):
+                return None
+            else:
+                return self
         else:
-            return self
+            return None
 
     def Line_if_Touching(self,other,epsilon=0.001):
         
@@ -342,28 +345,25 @@ class Line:
     def vs_Sect(self,sectors,ref,epsilon=0.001)->list:
         return Lines_vs_Sectors([self],sectors,ref,epsilon)
 
-    def And(self,line,epsilon=0.001):
-        if self.On_Line(line.start,epsilon) and self.On_Line(line.end,epsilon):
-            return line.Return_Not_Match(epsilon)
+    def And(self,line,epsilon=0.001): #VEOMA OTALJANO DORADITI
 
-        elif line.On_Line(self.start,epsilon) and line.On_Line(self.end,epsilon):
-            return self.Return_Not_Match(epsilon)
+        l1=self.On_Line(line.start,epsilon)
+        l2=self.On_Line(line.end,epsilon)
+        r1=line.On_Line(self.start,epsilon)
+        r2=line.On_Line(self.end,epsilon)
 
-        elif self.On_Line(line.start,epsilon) and line.On_Line(self.start,epsilon):
-            return Line(self.start,line.end).Return_Not_Match(epsilon)
+        if l1 and l2 and r1 and r2:
+            return Line(self.start,self.end)
 
-        elif self.On_Line(line.start,epsilon) and line.On_Line(self.start,epsilon):
-            return Line(self.start,line.start).Return_Not_Match(epsilon)
+        if l1 and l2 and not r1 and not r2:
+            return Line(self.start,self.end)
 
-        elif self.On_Line(line.end,epsilon) and line.On_Line(self.end,epsilon):
-            return Line(self.end,line.end).Return_Not_Match(epsilon)
-
-        elif self.On_Line(line.start,epsilon) and line.On_Line(self.end,epsilon):
-            return Line(self.end,line.start).Return_Not_Match(epsilon)
+        elif not l1 and not l2 and r1 and r2: 
+            return Line(line.start,line.end)
 
         else:
             return None
-
+        
     def Inerpolate(self,Density:float=100)->list:
         import numpy
         number_of_points=max(int(Density*self.Lenght()),1)
@@ -537,12 +537,6 @@ def Visible_Lines_From_Point(lines:list,ref,epsilon=0.001):
             sectors.extend(temp)
             visible.extend(temp)
 
-    plot=Graph(15,5)
-    plot.Lines(lines,linewidth=5)
-    plot.Lines(visible,color="red")
-    plot.Point(ref)
-    Graph.Show()
-
     return visible
 
 def And_Lines(lines1:list,lines2:list,epsilon=0.001):
@@ -550,8 +544,10 @@ def And_Lines(lines1:list,lines2:list,epsilon=0.001):
     for line1 in lines1:
         for line2 in lines2:
             temp=line1.And(line2,epsilon)
-            if temp:
-                output.append(temp)
+            if temp is not None:
+                temp=temp.Return_Not_Match(epsilon)
+                if temp is not None:
+                    output.append(temp)
     return output
 
 def Visible_Line_From_Both_Points(lines:list,p1,p2,epsilon=0.001):
@@ -573,28 +569,37 @@ def Time_Left(startTime:float,currentTime:float,step:int,maxSteps:int):
     averageTime=passed/(step+1)
     return round(averageTime*(maxSteps-step),1)
 
-def Test_Lines(lines:list,phase=pi/2,increment=pi/2,radius=5,epsilon=0.001):
+def Test_Lines(lines:list,phase=pi/2,startPhase=0,increment=pi/2,radius=5,epsilon=0.001):
     import numpy
     from math import sin,cos
     import time
 
-    print_progress_bar(0,1,prefix="\tLine Visibility: ")
+    print_progress_bar(0,1,prefix="\tLine Visibility:\t")
     
     output=[]
     start=time.time()
     
     maxSteps=(2*pi/increment)-1
 
-    for t in numpy.arange(0,2*pi,increment):
+    for t in numpy.arange(startPhase,2*pi+startPhase,increment):
         
         observer=Point(radius*cos(t),radius*sin(t))
         illuminator=Point(radius*cos(t+phase),radius*sin(t+phase))
+        
         visible=Visible_Line_From_Both_Points(lines,observer,illuminator,epsilon)
+
         output.append((visible,illuminator,observer))
+
+        """plot=Graph()
+        plot.Lines(lines,linewidth=5)
+        plot.Lines(visible,color="red")
+        plot.Point(illuminator)
+        plot.Point(observer)
+        Graph.Show()"""
 
         step=t/increment
 
-        print_progress_bar(step,maxSteps,prefix="\tLine Visibility: ",suffix="\t"+str(Time_Left(start,time.time(),step,maxSteps)),message=("\tVisibility Finished, Elapsed Time="+str(round(time.time()-start,1))))
+        print_progress_bar(step,maxSteps,prefix="\tLine Visibility:\t",suffix="\t"+str(Time_Left(start,time.time(),step,maxSteps)),message=("\tVisibility Finished, Elapsed Time="+str(round(time.time()-start,1))))
     
     return (output)
 
@@ -603,7 +608,8 @@ def Lines_Shine(packet:tuple,Density:float=100):
     shine=0
     for line in lines:
         #shine+=line.Line_Shine(observer,illuminator,Density)
-        shine+=line.Lenght()
+        #shine+=line.Lenght()
+        shine+=1
     return shine
 
 def Shine(packets:list,Density:float=100):
@@ -611,12 +617,12 @@ def Shine(packets:list,Density:float=100):
     shines=[]
     start=time.time()
     maxSteps=len(packets)-1
-    print_progress_bar(0,1,prefix="\tLine Shine: ")
+    print_progress_bar(0,1,prefix="\tLine Shine:\t")
     for l in packets:
         shines.append(Lines_Shine(l,Density))
 
         step=packets.index(l)
-        print_progress_bar(step,maxSteps,prefix="\tLine Shine: ",suffix="\t"+str(Time_Left(start,time.time(),step,maxSteps)),message=("\tShine Finished, Elapsed Time="+str(round(time.time()-start,1))))
+        print_progress_bar(step,maxSteps,prefix="\tLine Shine:\t",suffix="\t"+str(Time_Left(start,time.time(),step,maxSteps)),message=("\tShine Finished, Elapsed Time="+str(round(time.time()-start,1))))
     return shines
 
 def SaveData(data:list,name:str,path:str=""):
@@ -634,9 +640,9 @@ def LoadData(name:str,path:str="")->list:
     print("\tData loaded from:\t"+loadFile)
     return data
 
-def EndToEnd(lines:list,increment=pi/2,Density:float=100,epsilon=0.001)->float:  
+def EndToEnd(lines:list,increment=pi/2,startPhase=0,Density:float=100,epsilon=0.001)->float:  
     
-    visible=Test_Lines(lines,phase=pi/2,increment=increment,epsilon=epsilon)
+    visible=Test_Lines(lines,phase=pi/2,increment=increment,startPhase=startPhase,epsilon=epsilon)
 
     SaveData(visible,"visible")
     
