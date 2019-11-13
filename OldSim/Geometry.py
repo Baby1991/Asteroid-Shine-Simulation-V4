@@ -64,6 +64,9 @@ class Point:
             return p1
         else:
             return p2
+    
+    def Area_Triangle(self,p1,p2):
+        return abs(((p2.x*p1.y-p1.x*p2.y)-(p2.x*self.y-self.x*p2.y)+(p1.x*self.y-self.x*p1.y))/2)
 
 class Line:
     start=Point(0,0)
@@ -345,7 +348,12 @@ class Line:
     def vs_Sect(self,sectors,ref,epsilon=0.001)->list:
         return Lines_vs_Sectors([self],sectors,ref,epsilon)
 
-    def And(self,line,epsilon=0.001): #VEOMA OTALJANO DORADITI
+    def Area_Lines(self,line)->float:
+        A1=self.start.Area_Triangle(line.start,line.end)
+        A2=self.start.Area_Triangle(self.end,line.end)
+        return A1+A2
+        
+    def And(self,line,epsilon=0.001):
 
         l1=self.On_Line(line.start,epsilon)
         l2=self.On_Line(line.end,epsilon)
@@ -360,6 +368,27 @@ class Line:
 
         elif not l1 and not l2 and r1 and r2: 
             return Line(line.start,line.end)
+
+        else:
+            return None
+
+    def And1(self,line,epsilon=0.001):
+        import operator
+        p1=self.start
+        p2=self.end
+        p3=line.start
+        p4=line.end
+        points=[p1(),p2(),p3(),p4()]
+
+        if self.Area_Lines(line)<=epsilon:
+            
+            if self.Angle_Of_Slope()-90<=epsilon:
+                points.sort(key = operator.itemgetter(1))
+                return Line(Point(points[1][0],points[1][1]),Point(points[2][0],points[2][1]))
+            
+            else:
+                points.sort(key = operator.itemgetter(0))
+                return Line(Point(points[1][0],points[1][1]),Point(points[2][0],points[2][1]))
 
         else:
             return None
@@ -543,7 +572,7 @@ def And_Lines(lines1:list,lines2:list,epsilon=0.001):
     output=[]
     for line1 in lines1:
         for line2 in lines2:
-            temp=line1.And(line2,epsilon)
+            temp=line1.And1(line2,epsilon)
             if temp is not None:
                 temp=temp.Return_Not_Match(epsilon)
                 if temp is not None:
