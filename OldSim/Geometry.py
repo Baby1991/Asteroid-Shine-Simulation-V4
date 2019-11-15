@@ -600,15 +600,13 @@ def Visible_Lines_From_Point(lines:list,ref,epsilon=0.001):
 
 def And_Lines(lines1:list,lines2:list,epsilon=0.001):
     output=[]
-    print(len(lines1))
-    print(len(lines2))
     for line1 in lines1:
         for line2 in lines2:
             if line1.And0(line2,epsilon):
                 temp=line1.And0(line2,epsilon).Return_Not_Match(epsilon)
                 if temp is not None:
                     output.append(temp)
-                    
+    print(len(lines1),len(lines2),len(output))        
     return output
 
 def Visible_Line_From_Both_Points(lines:list,p1,p2,epsilon=0.001):
