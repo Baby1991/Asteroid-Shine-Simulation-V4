@@ -602,11 +602,12 @@ def And_Lines(lines1:list,lines2:list,epsilon=0.001):
     output=[]
     for line1 in lines1:
         for line2 in lines2:
-            if line1.And0(line2,epsilon):
-                temp=line1.And0(line2,epsilon).Return_Not_Match(epsilon)
+            if line1.And(line2,epsilon):
+                temp=line1.And(line2,epsilon).Return_Not_Match(epsilon)
                 if temp is not None:
                     output.append(temp)
-    print(len(lines1),len(lines2),len(output))        
+    
+    #print(len(lines1),len(lines2),len(output),len(output1))        
     return output
 
 def Visible_Line_From_Both_Points(lines:list,p1,p2,epsilon=0.001):
@@ -649,18 +650,11 @@ def Test_Lines(lines:list,phase=pi/2,startPhase=0,increment=pi/2,radius=5,epsilo
 
         output.append((visible,illuminator,observer))
 
-        """plot=Graph()
-        plot.Lines(lines,linewidth=5)
-        plot.Lines(visible,color="red")
-        plot.Point(illuminator)
-        plot.Point(observer)
-        Graph.Show()"""
-
         step=t/increment
 
-        print_progress_bar(step,maxSteps,prefix="\tLine Visibility:\t",suffix="\t"+str(Time_Left(start,time.time(),step,maxSteps)),message=("\tVisibility Finished,\tElapsed Time="+str(round(time.time()-start,1))))
+        print_progress_bar(step,maxSteps,prefix="\tLine Visibility:\t",suffix="\t"+str(Time_Left(start,time.time(),step,maxSteps)),message=("\tVisibility Finished,\tElapsed Time = "+str(round(time.time()-start,1))))
     
-    return (output)
+    return output
 
 def Lines_Shine(packet:tuple,Density:float=100):
     (lines,observer,illuminator)=packet
@@ -678,9 +672,10 @@ def Shine(packets:list,Density:float=100):
     maxSteps=len(packets)-1
     print_progress_bar(0,1,prefix="\tLine Shine:\t\t")
     for l in packets:
-        shines.append(Lines_Shine(l,Density))
+        #shines.append(Lines_Shine(l,Density))
+        shines.append(1)
         step=packets.index(l)
-        print_progress_bar(step,maxSteps,prefix="\tLine Shine:\t\t",suffix="\t"+str(Time_Left(start,time.time(),step,maxSteps)),message=("\tShine Finished,\tElapsed Time="+str(round(time.time()-start,1))))
+        print_progress_bar(step,maxSteps,prefix="\tLine Shine:\t\t",suffix="\t"+str(Time_Left(start,time.time(),step,maxSteps)),message=("\tShine Finished,\t\tElapsed Time = "+str(round(time.time()-start,1))))
     return shines
 
 def SaveData(data:list,name:str,path:str=""):
