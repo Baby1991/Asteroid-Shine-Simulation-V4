@@ -20,6 +20,9 @@ class Point:
     def __round__(self,SignificantDigits=0):
         return Point(round(self()[0],SignificantDigits),round(self()[1],SignificantDigits))
 
+    def __sub__(self,p):
+        return Point(self.x-p.x,self.y-p.y)
+
     def Match(self,p2,epsilon=0.001)->bool:
         import math
         d=math.sqrt(sum([(a - b) ** 2 for a, b in zip(self(), p2())]))
@@ -353,7 +356,55 @@ class Line:
         A2=self.start.Area_Triangle(self.end,line.end)
         return A1+A2
         
-    def And(self,line,epsilon=0.001):
+    def And(self,line,epsilon=0.001):   
+
+        l1=self.On_Line(line.start,epsilon)
+        l2=self.On_Line(line.end,epsilon)
+        r1=line.On_Line(self.start,epsilon)
+        r2=line.On_Line(self.end,epsilon)
+
+        if r1:
+            
+            if r2:
+                return self
+            
+            elif l2:
+                return Line(self.start,line.end)
+
+            else:
+                return Line(self.start,line.start) 
+        
+        elif r2:
+
+            if r1:
+                return Line(self.end,line.start)
+            
+            else:
+                return Line(self.end,line.end)
+        
+        elif l1:
+
+            if l2:
+                return line
+            
+            elif r2:
+                return Line(line.start,self.end)
+            
+            else:
+                return Line(line.start,self.start)
+
+        elif l2:
+
+            if r2:
+                return Line(self.end,line.end)
+            
+            else:
+                return Line(self.start,line.end)
+
+        else:
+            return None
+
+    def And0(self,line,epsilon=0.001):
 
         l1=self.On_Line(line.start,epsilon)
         l2=self.On_Line(line.end,epsilon)
@@ -372,27 +423,6 @@ class Line:
         else:
             return None
 
-    def And1(self,line,epsilon=0.001):
-        import operator
-        p1=self.start
-        p2=self.end
-        p3=line.start
-        p4=line.end
-        points=[p1(),p2(),p3(),p4()]
-
-        if self.Area_Lines(line)<=epsilon:
-            
-            if self.Angle_Of_Slope()-90<=epsilon:
-                points.sort(key = operator.itemgetter(1))
-                return Line(Point(points[1][0],points[1][1]),Point(points[2][0],points[2][1]))
-            
-            else:
-                points.sort(key = operator.itemgetter(0))
-                return Line(Point(points[1][0],points[1][1]),Point(points[2][0],points[2][1]))
-
-        else:
-            return None
-        
     def Inerpolate(self,Density:float=100)->list:
         import numpy
         number_of_points=max(int(Density*self.Lenght()),1)
@@ -570,13 +600,15 @@ def Visible_Lines_From_Point(lines:list,ref,epsilon=0.001):
 
 def And_Lines(lines1:list,lines2:list,epsilon=0.001):
     output=[]
+    print(len(lines1))
+    print(len(lines2))
     for line1 in lines1:
         for line2 in lines2:
-            temp=line1.And1(line2,epsilon)
-            if temp is not None:
-                temp=temp.Return_Not_Match(epsilon)
+            if line1.And0(line2,epsilon):
+                temp=line1.And0(line2,epsilon).Return_Not_Match(epsilon)
                 if temp is not None:
                     output.append(temp)
+                    
     return output
 
 def Visible_Line_From_Both_Points(lines:list,p1,p2,epsilon=0.001):
@@ -628,7 +660,7 @@ def Test_Lines(lines:list,phase=pi/2,startPhase=0,increment=pi/2,radius=5,epsilo
 
         step=t/increment
 
-        print_progress_bar(step,maxSteps,prefix="\tLine Visibility:\t",suffix="\t"+str(Time_Left(start,time.time(),step,maxSteps)),message=("\tVisibility Finished, Elapsed Time="+str(round(time.time()-start,1))))
+        print_progress_bar(step,maxSteps,prefix="\tLine Visibility:\t",suffix="\t"+str(Time_Left(start,time.time(),step,maxSteps)),message=("\tVisibility Finished,\tElapsed Time="+str(round(time.time()-start,1))))
     
     return (output)
 
@@ -646,12 +678,11 @@ def Shine(packets:list,Density:float=100):
     shines=[]
     start=time.time()
     maxSteps=len(packets)-1
-    print_progress_bar(0,1,prefix="\tLine Shine:\t")
+    print_progress_bar(0,1,prefix="\tLine Shine:\t\t")
     for l in packets:
         shines.append(Lines_Shine(l,Density))
-
         step=packets.index(l)
-        print_progress_bar(step,maxSteps,prefix="\tLine Shine:\t",suffix="\t"+str(Time_Left(start,time.time(),step,maxSteps)),message=("\tShine Finished, Elapsed Time="+str(round(time.time()-start,1))))
+        print_progress_bar(step,maxSteps,prefix="\tLine Shine:\t\t",suffix="\t"+str(Time_Left(start,time.time(),step,maxSteps)),message=("\tShine Finished,\tElapsed Time="+str(round(time.time()-start,1))))
     return shines
 
 def SaveData(data:list,name:str,path:str=""):
