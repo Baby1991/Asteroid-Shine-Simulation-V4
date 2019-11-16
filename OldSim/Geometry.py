@@ -696,7 +696,7 @@ class Asteroid:
 
         self.visible=output
         return output
-    
+
     def Test_Shine(self,phase=pi/2,startPhase=0,increment=pi/2,radius=5,epsilon=0.001,Density:float=100,save:bool=False)->list:
         
         if not self.visible:
@@ -855,7 +855,7 @@ def NmbrTrue(bools:list,num:int)->bool:
         return True
     else:
         return False
-    
+
 def Find_Crossed_Lines(lines:list,epsilon=0.001)->tuple:
     for line in lines:
         for line1 in lines:

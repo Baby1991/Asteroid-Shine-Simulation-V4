@@ -1,8 +1,8 @@
-from Asteroid_Geometry.Geometry import *
+import Asteroid_Geometry.Geometry as geo 
 
 from math import pi,cos,sin
 
-ast=Asteroid()
+ast=geo.Asteroid()
 """ast.Circle(increment=pi/256,p=-0.9,q=-0.9)
 ast.Circle(increment=pi/256,p=0.9,q=-0.9)
 ast.Circle(increment=pi/256,p=-0.9,q=0.9)
@@ -13,7 +13,7 @@ ast.Load("Asteroid")
 #ast.Test_Shine()
 #ast.Save()
 
-plot=Graph()
+plot=geo.Graph()
 plot.Values(ast.shine)
 plot.Save("Shine")
-Graph.Show()
+geo.Graph.Show()
