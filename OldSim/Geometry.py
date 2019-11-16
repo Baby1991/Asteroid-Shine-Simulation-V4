@@ -557,10 +557,11 @@ class Graph:
             ys=[l.start.y,l.end.y]
             self.ax.plot(xs,ys,linewidth=linewidth,marker=marker,color=color)
 
-    def Values(self,values:list,color="black",marker="."):
+    def Values(self,values:list,x:list=[],color="black",marker="."):
         import numpy
         from matplotlib.pyplot import plot
-        x=numpy.arange(len(values))
+        if x is []:
+            x=numpy.arange(len(values))
         self.ax.plot(x,values,marker=marker,color=color)
 
     def Save(self,name,path="",extenstion="png"):
@@ -589,19 +590,8 @@ class Asteroid:
         self.fixedLines=[]
         self.name=name
 
-    def __call__(self,epsilon=0.001):
-        lines1=self.lines
-        i=0
-        print('\r %s\tFixing Lines:\t%s' % (self.name,i*"*"+(5-i)*"."), end='\r')
-        while Find_Crossed_Lines(lines1,epsilon):
-            print('\r %s\tFixing Lines:\t%s' % (self.name,i*"*"+(5-i)*"."), end='\r')
-            r=Find_Crossed_Lines(lines1,epsilon)
-            lines1.remove(r[1])
-            lines1.remove(r[2])
-            lines1.extend(r[0])
-            i=(i+1)%6
-        print(print(' %s\tLines Fixed!\n' % (self.name)))
-        return lines1
+    def __call__(self):
+        return self.lines
 
     def __repr__(self):
         return repr(self.lines) 
@@ -609,13 +599,24 @@ class Asteroid:
     def Line(self,line):
         self.lines.append(line)
 
-    def Circle(self,p=0,q=0,r=1,start=0*pi,end=2*pi,increment=1/4*pi,SignificantDigits=6):
+    def Circle(self,p=0,q=0,a=1,b=1,start=0*pi,end=2*pi,increment=1/4*pi,SignificantDigits=6):
         from math import pi,cos,sin
         import numpy
         lines=[]
         for i in numpy.arange(start,end,increment):
-            t0=round(Point(r*cos(i)+p,r*sin(i)+q),SignificantDigits)
-            t1=round(Point(r*cos(i+increment)+p,r*sin(i+increment)+q),SignificantDigits)
+            t0=round(Point(a*cos(i)+p,b*sin(i)+q),SignificantDigits)
+            t1=round(Point(a*cos(i+increment)+p,b*sin(i+increment)+q),SignificantDigits)
+            l=Line(t0,t1)
+            lines.append(l)
+        self.lines.extend(lines)
+
+    def Function(self,xFunc,yFunc,p=0,q=0,a=1,b=1,start=0*pi,end=2*pi,increment=1/4*pi,SignificantDigits=6):
+        from math import pi,cos,sin
+        import numpy
+        lines=[]
+        for i in numpy.arange(start,end,increment):
+            t0=round(Point(a*f(xFunc,t=i)+p,b*f(yFunc,t=i)+q),SignificantDigits)
+            t1=round(Point(a*f(xFunc,t=i+increment)+p,b*f(yFunc,t=i+increment)+q),SignificantDigits)
             l=Line(t0,t1)
             lines.append(l)
         self.lines.extend(lines)
@@ -664,13 +665,25 @@ class Asteroid:
         if fixedLines is not "":
             self.fixedLines=LoadData(fixedLines,path)
 
+    def FixLines(self,epsilon=0.001):
+        lines1=self.lines
+        print(self.name+"\tFixing Lines, This May Take A While...")
+        while Find_Crossed_Lines(lines1,epsilon):
+            r=Find_Crossed_Lines(lines1,epsilon)
+            lines1.remove(r[1])
+            lines1.remove(r[2])
+            lines1.extend(r[0])
+        print(self.name+"\tLines Fixed")
+        self.fixedLines=lines1
+        return lines1
+
     def Test_Visibility(self,phase=pi/2,startPhase=0,increment=pi/2,radius=5,epsilon=0.001,save:bool=False)->list:
         import numpy
         from math import sin,cos
         import time
 
         if not self.fixedLines:
-            self.fixedLines=self()
+            self.FixLines()
 
         print_progress_bar(0,1,prefix=" "+self.name+"\tLine Visibility:\t")
         
@@ -721,6 +734,30 @@ class Asteroid:
         self.shine=shines
         return shines
 
+    def Multi_Thread_Visibility(self,phase=pi/2,startPhase=0,increment=pi/2,radius=5,epsilon=0.001):
+        import numpy
+        from math import sin,cos
+        import concurrent.futures
+        print("Multithreading:")
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            threads=[]
+            output=[]
+            for t in numpy.arange(startPhase,2*pi+startPhase,increment):    
+                observer=Point(radius*cos(t),radius*sin(t))
+                illuminator=Point(radius*cos(t+phase),radius*sin(t+phase))
+                #Visible_Line_From_Both_Points(self.fixedLines,observer,illuminator,epsilon)
+                threads.append((executor.submit(Visible_Line_From_Both_Points,(self.fixedLines,observer,illuminator,epsilon)),illuminator,observer))
+            print("Generated threads")
+            while True:
+                try:
+                    for t,illuminator,observer in threads:
+                        output.append((t.result(),illuminator,observer))
+                    break
+                except:
+                    pass
+            print("Threads worked")
+            return output
+                
 def Lines_Not_Matching(lines:list,epsilon=0.001)->list:
     output=[]
     if lines is not None:
@@ -876,6 +913,11 @@ def Filter(data:list,cutoff:float=125)->list:
 def Shutdown():
     import os
     os.system('shutdown /p /f')
+
+def f(formula,**kwargs):
+    import sympy
+    expr=sympy.sympify(formula)
+    return expr.evalf(subs=kwargs)
 
 """def Valid_Lines(lines:list,epsilon=0.001)->list:
     lines1=lines
