@@ -646,10 +646,11 @@ class Asteroid:
     def Load(self,name:str="",lines:str="",fixedLines:str="",visible:str="",shine:str="",path:str=""):
         
         if name is not "":
-            self.lines=LoadData(name,path).lines
-            self.visible=LoadData(name,path).visible
-            self.shine=LoadData(name,path).shine
-            self.fixedLines=LoadData(name,path).fixedLines
+            Ast=LoadData(name,path)
+            self.lines=Ast.lines
+            self.visible=Ast.visible
+            self.shine=Ast.shine
+            self.fixedLines=Ast.fixedLines
 
         if lines is not "":
             self.lines=LoadData(lines,path)
