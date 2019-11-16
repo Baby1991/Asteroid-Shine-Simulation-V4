@@ -97,7 +97,7 @@ class Line:
         p2=Point(round(p2()[0],SignificantDigits),round(p2()[1],SignificantDigits))
         return Line(p1,p2)
 
-    def To_Tuple(self):
+    def To_Tuple(self)->tuple:
         x0=self.start.x
         y0=self.start.y
         x1=self.end.x
@@ -125,6 +125,20 @@ class Line:
     def On_Line(self,p:Point,epsilon=0.001)->bool:
         return self.start.Distance(p)+self.end.Distance(p)-self.start.Distance(self.end)<=epsilon
     
+    def Match(self,line,epsilon=0.001)->bool:
+        if (
+            self.start.Match(line.start,epsilon) 
+            and 
+            self.end.Match(line.end,epsilon)
+            ) or (
+            self.start.Match(line.end,epsilon) 
+            and 
+            self.end.Match(line.start,epsilon)
+            ):
+            return True
+        else:
+            return False
+
     def Angle_Of_Slope(self)->float:
         import math
         p1,p2=self()
@@ -155,7 +169,7 @@ class Line:
                 )
                 )
     
-    def Check_S_E_Match(self,epsilon=0.001):
+    def Check_S_E_Match(self,epsilon=0.001)->bool:
         return self.start.Match(self.end,epsilon)
 
     def Intercept_Line2(self,Line1,epsilon=0.001)->Point:
@@ -178,7 +192,7 @@ class Line:
             y = det(d, ydiff) / div
             return Point(x, y)
 
-    def Intercept_Segment2(self,Line2,epsilon=0.001):
+    def Intercept_Segment2(self,Line2,epsilon=0.001)->Point:
         p=self.Intercept_Line2(Line2,epsilon)
         if p:
             if self.On_Line(p) and Line2.On_Line(p):
@@ -188,7 +202,7 @@ class Line:
         else: 
             return None
 
-    def Intercept_Segment_Line(self,Line2,epsilon=0.001):
+    def Intercept_Segment_Line(self,Line2,epsilon=0.001)->Point:
         p=self.Intercept_Line2(Line2,epsilon)
         if p:
             if self.On_Line(p):
@@ -214,7 +228,7 @@ class Line:
             return norm(P - B)
         return norm(cross(A-B, A-P))/norm(B-A)
 
-    def Return_Not_Match(self,epsilon=0.001)->list:
+    def Return_Not_Zero(self,epsilon=0.001):
         if self is not None:
             if self.start.Match(self.end,epsilon):
                 return None
@@ -423,6 +437,48 @@ class Line:
         else:
             return None
 
+    def Continued(self,line,epsilon=0.001)->bool:
+        l1=self.start.Match(line.start,epsilon)
+        l2=self.start.Match(line.end,epsilon)
+        l3=self.end.Match(line.start,epsilon)
+        l4=self.end.Match(line.end,epsilon)
+        l=[l1,l2,l3,l4]
+
+        r1=self.On_Line(line.start,epsilon)
+        r2=self.On_Line(line.end,epsilon)
+        r3=line.On_Line(self.start,epsilon)
+        r4=line.On_Line(self.end,epsilon)
+        r=[r1,r2,r3,r4]
+
+        return NmbrTrue(l,1) and NmbrTrue(r,2)
+
+    def Divide(self,line,epsilon=0.001)->list:
+        if not self.Continued(line,epsilon):
+            cross=self.Intercept_Segment2(line,epsilon)
+            if cross is not None:
+                output=[]
+                l1=Line(self.start,cross)
+                l2=Line(self.end,cross)
+                l3=Line(line.start,cross)
+                l4=Line(line.end,cross)
+
+                if l1.Return_Not_Zero(epsilon) is not None:
+                    output.append(l1)
+                if l2.Return_Not_Zero(epsilon) is not None:
+                    output.append(l2)
+                if l3.Return_Not_Zero(epsilon) is not None:
+                    output.append(l3)
+                if l4.Return_Not_Zero(epsilon) is not None:
+                    output.append(l4)
+
+                if len(output):
+                    return output
+                else:
+                    return None
+
+        else:
+            return None    
+
     def Inerpolate(self,Density:float=100)->list:
         import numpy
         number_of_points=max(int(Density*self.Lenght()),1)
@@ -448,11 +504,11 @@ class Line:
 
         return output
 
-    def Closer_Angle(self,p1,ref):
+    def Closer_Angle(self,p1,ref)->float:
         closer_Point=ref.Closer_Point(self.start,self.end)
         return abs(p1.Angle_Points(closer_Point,ref))
 
-    def Point_Shine(self,p,observer,illuminator):
+    def Point_Shine(self,p,observer,illuminator)->float:
         from math import cos
         incline=min(self.Closer_Angle(p,illuminator),pi-self.Closer_Angle(p,illuminator))
         deflection=min(self.Closer_Angle(p,observer),pi-self.Closer_Angle(p,observer))
@@ -516,11 +572,154 @@ class Graph:
         from matplotlib.pyplot import show
         show()
 
+class Asteroid:
+    name=""
+    lines=[]
+    visible=[]
+    shine=[]
+    fixedLines=[]
+
+    def __init__(self,name="Asteroid"):
+        self.lines=[]
+        self.visible=[]
+        self.shine=[]
+        self.fixedLines=[]
+        self.name=name
+
+    def __call__(self,epsilon=0.001):
+        lines1=self.lines
+        i=0
+        while Find_Crossed_Lines(lines1,epsilon):
+            print('\r %s\tFixing Lines:\t%s' % (self.name,i*"*"+(3-i)*" "), end='\r')
+            r=Find_Crossed_Lines(lines1,epsilon)
+            lines1.remove(r[1])
+            lines1.remove(r[2])
+            lines1.extend(r[0])
+            i=(i+1)%4
+        return lines1
+
+    def __repr__(self):
+        return repr(self.lines) 
+
+    def Line(self,line):
+        self.lines.append(line)
+
+    def Circle(self,p=0,q=0,r=1,start=0*pi,end=2*pi,increment=1/4*pi,SignificantDigits=6):
+        from math import pi,cos,sin
+        import numpy
+        lines=[]
+        for i in numpy.arange(start,end,increment):
+            t0=round(Point(r*cos(i)+p,r*sin(i)+q),SignificantDigits)
+            t1=round(Point(r*cos(i+increment)+p,r*sin(i+increment)+q),SignificantDigits)
+            l=Line(t0,t1)
+            lines.append(l)
+        self.lines.extend(lines)
+
+    def Plot(self):
+        plot=Graph()
+        plot.Lines(self.lines)
+        return plot
+
+    def Save(self,name:str="",path:str="",lines:str="",visible:str="",shine:str="",fixedLines:str=""):
+        
+        if name is "":
+            name=self.name
+        SaveData(self,name,path)
+
+        if self.lines and lines:
+            SaveData(self.lines,lines,path)
+
+        if self.visible and visible:
+            SaveData(self.visible,visible,path)
+
+        if self.shine and shine:
+            SaveData(self.shine,shine,path)
+
+        if self.fixedLines and fixedLines:
+            SaveData(self.fixedLines,fixedLines,path)
+
+    def Load(self,name:str="",lines:str="",fixedLines:str="",visible:str="",shine:str="",path:str=""):
+        
+        if name is not "":
+            self.lines=LoadData(name,path).lines
+            self.visible=LoadData(name,path).visible
+            self.shine=LoadData(name,path).shine
+            self.fixedLines=LoadData(name,path).fixedLines
+
+        if lines is not "":
+            self.lines=LoadData(lines,path)
+
+        if visible is not "":
+            self.visible=LoadData(visible,path)
+
+        if shine is not "":
+            self.shine=LoadData(shine,path)
+
+        if fixedLines is not "":
+            self.fixedLines=LoadData(fixedLines,path)
+
+    def Test_Visibility(self,phase=pi/2,startPhase=0,increment=pi/2,radius=5,epsilon=0.001,save:bool=False)->list:
+        import numpy
+        from math import sin,cos
+        import time
+
+        if not self.fixedLines:
+            self.fixedLines=self()
+
+        print_progress_bar(0,1,prefix=" "+self.name+"\tLine Visibility:\t")
+        
+        output=[]
+        start=time.time()
+        
+        maxSteps=(2*pi/increment)-1
+
+        for t in numpy.arange(startPhase,2*pi+startPhase,increment):
+            
+            observer=Point(radius*cos(t),radius*sin(t))
+            illuminator=Point(radius*cos(t+phase),radius*sin(t+phase))
+            
+            visible=Visible_Line_From_Both_Points(self.fixedLines,observer,illuminator,epsilon)
+
+            output.append((visible,illuminator,observer))
+
+            step=t/increment
+
+            print_progress_bar(step,maxSteps,prefix=" "+self.name+"\tLine Visibility:\t",suffix="\t"+str(Time_Left(start,time.time(),step,maxSteps)),message=(self.name+"\tVisibility Finished,\tElapsed Time = "+str(round(time.time()-start,1))))
+        
+        if save:
+            SaveData(output,self.name+"_visibility")
+
+        self.visible=output
+        return output
+    
+    def Test_Shine(self,phase=pi/2,startPhase=0,increment=pi/2,radius=5,epsilon=0.001,Density:float=100,save:bool=False)->list:
+        
+        if not self.visible:
+            packets=self.Test_Visibility(phase,startPhase,increment,radius,epsilon)
+        else:
+            packets=self.visible
+        
+        import time
+        shines=[]
+        start=time.time()
+        maxSteps=len(packets)-1
+        print_progress_bar(0,1,prefix=" "+self.name+"\tLine Shine:\t\t")
+        for l in packets:
+            shines.append(Lines_Shine(l,Density))
+            step=packets.index(l)
+            print_progress_bar(step,maxSteps,prefix=" "+self.name+"\tLine Shine:\t\t",suffix="\t"+str(Time_Left(start,time.time(),step,maxSteps)),message=(self.name+"\tShine Finished,\t\tElapsed Time = "+str(round(time.time()-start,1))))
+        
+        if save:
+            SaveData(shines,self.name+"_shine")
+
+        self.shine=shines
+        return shines
+
 def Lines_Not_Matching(lines:list,epsilon=0.001)->list:
     output=[]
     if lines is not None:
         for line in lines:
-            if line.Return_Not_Match(epsilon) is not None:
+            if line.Return_Not_Zero(epsilon) is not None:
                 output.append(line)
 
         if len(output)>0:
@@ -546,17 +745,6 @@ def Connect_Lines(lines:list,epsilon=0.001)->list:
         lines1.remove(r[2])
         lines1.append(r[0])
     return lines1
-
-def Circle(p=0,q=0,r=1,start=0*pi,end=2*pi,increment=1/4*pi,SignificantDigits=6)->list:
-    from math import pi,cos,sin
-    import numpy
-    lines=[]
-    for i in numpy.arange(start,end,increment):
-        t0=round(Point(r*cos(i)+p,r*sin(i)+q),SignificantDigits)
-        t1=round(Point(r*cos(i+increment)+p,r*sin(i+increment)+q),SignificantDigits)
-        l=Line(t0,t1)
-        lines.append(l)
-    return lines
 
 def Lines_vs_Sect(lines:list,sector,ref,epsilon=0.001)->list:
     output=[]
@@ -603,7 +791,7 @@ def And_Lines(lines1:list,lines2:list,epsilon=0.001):
     for line1 in lines1:
         for line2 in lines2:
             if line1.And(line2,epsilon):
-                temp=line1.And(line2,epsilon).Return_Not_Match(epsilon)
+                temp=line1.And(line2,epsilon).Return_Not_Zero(epsilon)
                 if temp is not None:
                     output.append(temp)
     
@@ -629,7 +817,58 @@ def Time_Left(startTime:float,currentTime:float,step:int,maxSteps:int):
     averageTime=passed/(step+1)
     return round(averageTime*(maxSteps-step),1)
 
-def Test_Lines(lines:list,phase=pi/2,startPhase=0,increment=pi/2,radius=5,epsilon=0.001):
+def Lines_Shine(packet:tuple,Density:float=100):
+    (lines,observer,illuminator)=packet
+    shine=0
+    for line in lines:
+        #shine+=line.Line_Shine(observer,illuminator,Density)
+        #shine+=line.Lenght()
+        shine+=1
+    return shine
+
+def SaveData(data:list,name:str,path:str=""):
+    import os,pickle
+    saveFile=os.path.join(path,name)+".data"
+    with open(saveFile,'wb') as filehandle:
+        pickle.dump(data,filehandle)
+    print("\tData written to:\t"+saveFile)
+
+def LoadData(name:str,path:str="")->list:
+    import os,pickle
+    loadFile=os.path.join(path,name)+".data"
+    with open(loadFile,'rb') as filehandle:
+        data=pickle.load(filehandle)
+    print("\tData loaded from:\t"+loadFile)
+    return data
+
+def NmbrTrue(bools:list,num:int)->bool:
+    i=0
+    for t in bools:
+        if t:
+            i+=1
+    if i==num:
+        return True
+    else:
+        return False
+    
+def Find_Crossed_Lines(lines:list,epsilon=0.001)->tuple:
+    for line in lines:
+        for line1 in lines:
+            if line is not line1:
+                newlines=line.Divide(line1,epsilon)
+                if newlines:
+                    return((newlines,line,line1))
+
+"""def Valid_Lines(lines:list,epsilon=0.001)->list:
+    lines1=lines
+    while Find_Crossed_Lines(lines1,epsilon):
+        r=Find_Crossed_Lines(lines1,epsilon)
+        lines1.remove(r[1])
+        lines1.remove(r[2])
+        lines1.extend(r[0])
+    return lines1"""
+
+"""def Test_Lines(lines:list,phase=pi/2,startPhase=0,increment=pi/2,radius=5,epsilon=0.001):
     import numpy
     from math import sin,cos
     import time
@@ -654,55 +893,27 @@ def Test_Lines(lines:list,phase=pi/2,startPhase=0,increment=pi/2,radius=5,epsilo
 
         print_progress_bar(step,maxSteps,prefix="\tLine Visibility:\t",suffix="\t"+str(Time_Left(start,time.time(),step,maxSteps)),message=("\tVisibility Finished,\tElapsed Time = "+str(round(time.time()-start,1))))
     
-    return output
+    return output"""
 
-def Lines_Shine(packet:tuple,Density:float=100):
-    (lines,observer,illuminator)=packet
-    shine=0
-    for line in lines:
-        #shine+=line.Line_Shine(observer,illuminator,Density)
-        #shine+=line.Lenght()
-        shine+=1
-    return shine
-
-def Shine(packets:list,Density:float=100):
+"""def Shine(packets:list,Density:float=100):
     import time
     shines=[]
     start=time.time()
     maxSteps=len(packets)-1
     print_progress_bar(0,1,prefix="\tLine Shine:\t\t")
     for l in packets:
-        #shines.append(Lines_Shine(l,Density))
-        shines.append(1)
+        shines.append(Lines_Shine(l,Density))
         step=packets.index(l)
         print_progress_bar(step,maxSteps,prefix="\tLine Shine:\t\t",suffix="\t"+str(Time_Left(start,time.time(),step,maxSteps)),message=("\tShine Finished,\t\tElapsed Time = "+str(round(time.time()-start,1))))
-    return shines
+    return shines"""
 
-def SaveData(data:list,name:str,path:str=""):
-    import os,pickle
-    saveFile=os.path.join(path,name)+".data"
-    with open(saveFile,'wb') as filehandle:
-        pickle.dump(data,filehandle)
-    print("\tData written to:\t"+saveFile)
-
-def LoadData(name:str,path:str="")->list:
-    import os,pickle
-    loadFile=os.path.join(path,name)+".data"
-    with open(loadFile,'rb') as filehandle:
-        data=pickle.load(filehandle)
-    print("\tData loaded from:\t"+loadFile)
-    return data
-
-def EndToEnd(lines:list,increment=pi/2,startPhase=0,Density:float=100,epsilon=0.001)->float:  
-    
-    visible=Test_Lines(lines,phase=pi/2,increment=increment,startPhase=startPhase,epsilon=epsilon)
-
-    SaveData(visible,"visible")
-    
-    shines=Shine(visible,Density)
-
-    SaveData(shines,"shines")
-
-    print("\tEnd To End done")
-    return shines
-    
+"""def Circle(p=0,q=0,r=1,start=0*pi,end=2*pi,increment=1/4*pi,SignificantDigits=6)->list:
+    from math import pi,cos,sin
+    import numpy
+    lines=[]
+    for i in numpy.arange(start,end,increment):
+        t0=round(Point(r*cos(i)+p,r*sin(i)+q),SignificantDigits)
+        t1=round(Point(r*cos(i+increment)+p,r*sin(i+increment)+q),SignificantDigits)
+        l=Line(t0,t1)
+        lines.append(l)
+    return lines"""

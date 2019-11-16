@@ -2,19 +2,24 @@ from Geometry import *
 
 from math import pi,cos,sin
 
-#lines=Circle(increment=pi/32)
-lines=Circle(increment=pi/32,p=-0.9,q=-0.9)
-lines.extend(Circle(increment=pi/32,p=0.9,q=-0.9))
-lines.extend(Circle(increment=pi/32,p=-0.9,q=0.9))
-lines.extend(Circle(increment=pi/32,p=0.9,q=0.9))
+ast=Asteroid()
+ast.Circle(increment=pi/32,p=-0.9,q=-0.9)
+ast.Circle(increment=pi/32,p=0.9,q=-0.9)
+ast.Circle(increment=pi/32,p=-0.9,q=0.9)
+ast.Circle(increment=pi/32,p=0.9,q=0.9)
+#ast.Load(lines="lines")
+ast.Test_Shine(phase=0,increment=pi/32)
+val=[]
+for t,_,_ in ast.visible:
+    val.append(len(t))
+plot=Graph()
+plot.Values(val)
+plot.Save("Graph")
 
-visible=Test_Lines(lines,increment=pi/2,phase=0)
-
-for i,j,k in visible:
-    plot=Graph()
-    plot.Lines(lines,linewidth=5)
-    plot.Lines(i,color="red")
-    Graph.Show()
+ast.Save(visible="visible",shine="shine")
+plot=Graph()
+plot.Values(ast.shine)
+Graph.Show()
+ast.Plot().Save(ast.name)
 
     
-
