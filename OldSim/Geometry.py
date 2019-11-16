@@ -512,11 +512,12 @@ class Line:
         from math import cos
         incline=min(self.Closer_Angle(p,illuminator),pi-self.Closer_Angle(p,illuminator))
         deflection=min(self.Closer_Angle(p,observer),pi-self.Closer_Angle(p,observer))
-        """return(
+        """"return(
         (cos(incline)*cos(deflection))
         /
         (cos(incline)+cos(deflection))
-        )"""
+        )
+        """
         return 1
 
     def Line_Shine(self,observer,illuminator,Density:float=100,albedo=1)->float:
@@ -524,7 +525,7 @@ class Line:
         shine=0
         for p in points:
             shine+=(albedo*self.Point_Shine(p,observer,illuminator))
-        #shine=shine/Density
+        shine=shine*self.Lenght()/len(points)
         return shine
 
 class Graph:
@@ -567,6 +568,8 @@ class Graph:
         import os
         saveFile=os.path.join(path,name)+"."+extenstion
         self.fig.savefig(saveFile)
+        print("\tImage Saved:\t\t"+saveFile)
+
 
     def Show():
         from matplotlib.pyplot import show
@@ -686,7 +689,7 @@ class Asteroid:
 
             step=t/increment
 
-            print_progress_bar(step,maxSteps,prefix=" "+self.name+"\tLine Visibility:\t",suffix="\t"+str(Time_Left(start,time.time(),step,maxSteps)),message=(self.name+"\tVisibility Finished,\tElapsed Time = "+str(round(time.time()-start,1))))
+            print_progress_bar(step,maxSteps,prefix=" "+self.name+"\tLine Visibility:\t",suffix="\t"+str(Time_Left(start,time.time(),step,maxSteps)),message=(" "+self.name+"\tVisibility Finished,\tElapsed Time = "+str(round(time.time()-start,1))))
         
         if save:
             SaveData(output,self.name+"_visibility")
@@ -709,7 +712,7 @@ class Asteroid:
         for l in packets:
             shines.append(Lines_Shine(l,Density))
             step=packets.index(l)
-            print_progress_bar(step,maxSteps,prefix=" "+self.name+"\tLine Shine:\t\t",suffix="\t"+str(Time_Left(start,time.time(),step,maxSteps)),message=(self.name+"\tShine Finished,\t\tElapsed Time = "+str(round(time.time()-start,1))))
+            print_progress_bar(step,maxSteps,prefix=" "+self.name+"\tLine Shine:\t\t",suffix="\t"+str(Time_Left(start,time.time(),step,maxSteps)),message=(" "+self.name+"\tShine Finished,\t\tElapsed Time = "+str(round(time.time()-start,1))))
         
         if save:
             SaveData(shines,self.name+"_shine")
@@ -823,9 +826,9 @@ def Lines_Shine(packet:tuple,Density:float=100):
     (lines,observer,illuminator)=packet
     shine=0
     for line in lines:
-        #shine+=line.Line_Shine(observer,illuminator,Density)
+        shine+=line.Line_Shine(observer,illuminator,Density)
         #shine+=line.Lenght()
-        shine+=1
+        #shine+=1
     return shine
 
 def SaveData(data:list,name:str,path:str=""):
@@ -868,6 +871,10 @@ def Filter(data:list,cutoff:float=125)->list:
     b, a = signal.butter(8, cutoff/1000)
     y = signal.filtfilt(b, a, data, padlen=len(data)-1)
     return list(y)
+
+def Shutdown():
+    import os
+    os.system('shutdown /p /f')
 
 """def Valid_Lines(lines:list,epsilon=0.001)->list:
     lines1=lines
