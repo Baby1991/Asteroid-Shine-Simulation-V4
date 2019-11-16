@@ -510,9 +510,9 @@ class Line:
 
     def Point_Shine(self,p,observer,illuminator)->float:
         from math import cos
-        incline=min(self.Closer_Angle(p,illuminator),pi-self.Closer_Angle(p,illuminator))
-        deflection=min(self.Closer_Angle(p,observer),pi-self.Closer_Angle(p,observer))
-        """"return(
+        #incline=min(self.Closer_Angle(p,illuminator),pi-self.Closer_Angle(p,illuminator))
+        #deflection=min(self.Closer_Angle(p,observer),pi-self.Closer_Angle(p,observer))
+        """return(
         (cos(incline)*cos(deflection))
         /
         (cos(incline)+cos(deflection))
