@@ -589,13 +589,15 @@ class Asteroid:
     def __call__(self,epsilon=0.001):
         lines1=self.lines
         i=0
+        print('\r %s\tFixing Lines:\t%s' % (self.name,i*"*"+(5-i)*"."), end='\r')
         while Find_Crossed_Lines(lines1,epsilon):
-            print('\r %s\tFixing Lines:\t%s' % (self.name,i*"*"+(3-i)*" "), end='\r')
+            print('\r %s\tFixing Lines:\t%s' % (self.name,i*"*"+(5-i)*"."), end='\r')
             r=Find_Crossed_Lines(lines1,epsilon)
             lines1.remove(r[1])
             lines1.remove(r[2])
             lines1.extend(r[0])
-            i=(i+1)%4
+            i=(i+1)%6
+        print(print(' %s\tLines Fixed!\n' % (self.name)))
         return lines1
 
     def __repr__(self):
@@ -858,6 +860,14 @@ def Find_Crossed_Lines(lines:list,epsilon=0.001)->tuple:
                 newlines=line.Divide(line1,epsilon)
                 if newlines:
                     return((newlines,line,line1))
+
+def Filter(data:list,cutoff:float=125)->list:
+    from scipy import signal
+    import numpy
+    data=numpy.array(data)
+    b, a = signal.butter(8, cutoff/1000)
+    y = signal.filtfilt(b, a, data, padlen=len(data)-1)
+    return list(y)
 
 """def Valid_Lines(lines:list,epsilon=0.001)->list:
     lines1=lines
