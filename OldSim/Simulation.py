@@ -3,30 +3,23 @@ from Geometry import *
 from math import pi,cos,sin
 import numpy as np
 
-ast=Asteroid()
-ast.Ellipse(increment=pi/512,p=-0.4,a=0.5,b=0.5)
-ast.Ellipse(increment=pi/512,p=0.9)
+ast=Asteroid("Asteroid 1",increment=pi/16,phase=0)
 
+ast.Ellipse(increment=pi/16,p=-0.9,q=-0.9)
+ast.Ellipse(increment=pi/16,p=0.9,q=-0.9)
+ast.Ellipse(increment=pi/16,p=-0.9,q=0.9)
+ast.Ellipse(increment=pi/16 ,p=0.9,q=0.9)
 
+#ast.Load("Asteroid 512 512 1024")
 
-#ast.Load("Asteroid")
-ast.Test_Shine(phase=pi/4,increment=pi/1024,radius=10)
+ast.Test()
 ast.Save()
-
-#ast.Plot().Save("Asteroid")
-
-"""x=np.arange(0,2,1/512)
+#Shutdown()
 
 plot=Graph()
-plot.Values(ast.shine,x)
-plot.Save("Shine")
+r=[len(x) for x,y,z in ast.visible]
+plot.Values(r)
 plot=Graph()
-plot.Values(Filter(ast.shine)[0],x)
-plot.Save("LowPass")
-plot=Graph()
-plot.Values(Filter(ast.shine)[1],x)
-plot.Save("Gust")
-plot=Graph()
-plot.Values(Filter(ast.shine)[2],x)
-plot.Save("Pad")"""
-
+plot.Values(Filter(r))
+Graph.Show()
+    

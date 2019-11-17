@@ -71,6 +71,23 @@ class Point:
     def Area_Triangle(self,p1,p2):
         return abs(((p2.x*p1.y-p1.x*p2.y)-(p2.x*self.y-self.x*p2.y)+(p1.x*self.y-self.x*p1.y))/2)
 
+    def Visibly_Connected_Lines(self,line1,line2,epsilon=0.001):
+        p1=line1.start
+        p2=line1.end
+        p3=line2.start
+        p4=line2.end
+
+        if self.Area_Triangle(p1,p3)<=epsilon:
+            return Line(p2,p4)
+        elif self.Area_Triangle(p1,p4)<=epsilon:
+            return Line(p2,p3)
+        elif self.Area_Triangle(p2,p3)<=epsilon:
+            return Line(p1,p4)
+        elif self.Area_Triangle(p2,p4)<=epsilon:
+            return Line(p1,p3)
+        else:
+            return None
+
 class Line:
     start=Point(0,0)
     end=Point(0,0)
@@ -365,10 +382,10 @@ class Line:
     def vs_Sect(self,sectors,ref,epsilon=0.001)->list:
         return Lines_vs_Sectors([self],sectors,ref,epsilon)
 
-    def Area_Lines(self,line)->float:
+    """def Area_Lines(self,line)->float:
         A1=self.start.Area_Triangle(line.start,line.end)
         A2=self.start.Area_Triangle(self.end,line.end)
-        return A1+A2
+        return A1+A2"""
         
     def And(self,line,epsilon=0.001):   
 
@@ -418,7 +435,7 @@ class Line:
         else:
             return None
 
-    def And0(self,line,epsilon=0.001):
+    """def And0(self,line,epsilon=0.001):
 
         l1=self.On_Line(line.start,epsilon)
         l2=self.On_Line(line.end,epsilon)
@@ -435,7 +452,7 @@ class Line:
             return Line(line.start,line.end)
 
         else:
-            return None
+            return None"""
 
     def Continued(self,line,epsilon=0.001)->bool:
         l1=self.start.Match(line.start,epsilon)
@@ -560,7 +577,7 @@ class Graph:
     def Values(self,values:list,x:list=[],color="black",marker="."):
         import numpy
         from matplotlib.pyplot import plot
-        if x is []:
+        if not x:
             x=numpy.arange(len(values))
         self.ax.plot(x,values,marker=marker,color=color)
 
@@ -571,24 +588,38 @@ class Graph:
         self.fig.savefig(saveFile)
         print("\tImage Saved:\t\t"+saveFile)
 
-
     def Show():
         from matplotlib.pyplot import show
         show()
 
 class Asteroid:
-    name=""
+    
     lines=[]
     visible=[]
     shine=[]
     fixedLines=[]
 
-    def __init__(self,name="Asteroid"):
+    name=""
+    phase=pi/2
+    startPhase=0
+    increment=pi/2
+    radius=5
+    epsilon=0.001
+    Density=100
+
+    def __init__(self,name="Asteroid",phase=pi/2,startPhase=0,increment=pi/2,radius=5,epsilon=0.001,Density:float=100):
         self.lines=[]
         self.visible=[]
         self.shine=[]
         self.fixedLines=[]
+
         self.name=name
+        self.phase=phase
+        self.startPhase=startPhase
+        self.increment=increment
+        self.radius=radius
+        self.epsilon=epsilon
+        self.Density=Density
 
     def __call__(self):
         return self.lines
@@ -626,65 +657,43 @@ class Asteroid:
         plot.Lines(self.lines)
         return plot
 
-    def Save(self,name:str="",path:str="",lines:str="",visible:str="",shine:str="",fixedLines:str=""):
+    def Save(self,name:str="",path:str=""):
         
         if name is "":
             name=self.name
         SaveData(self,name,path)
 
-        if self.lines and lines:
-            SaveData(self.lines,lines,path)
-
-        if self.visible and visible:
-            SaveData(self.visible,visible,path)
-
-        if self.shine and shine:
-            SaveData(self.shine,shine,path)
-
-        if self.fixedLines and fixedLines:
-            SaveData(self.fixedLines,fixedLines,path)
-
-    def Load(self,name:str="",lines:str="",fixedLines:str="",visible:str="",shine:str="",path:str=""):
+    def Load(self,name:str="",path:str=""):
         
-        if name is not "":
-            Ast=LoadData(name,path)
-            self.lines=Ast.lines
-            self.visible=Ast.visible
-            self.shine=Ast.shine
-            self.fixedLines=Ast.fixedLines
-
-        if lines is not "":
-            self.lines=LoadData(lines,path)
-
-        if visible is not "":
-            self.visible=LoadData(visible,path)
-
-        if shine is not "":
-            self.shine=LoadData(shine,path)
-
-        if fixedLines is not "":
-            self.fixedLines=LoadData(fixedLines,path)
+        if name is "":
+            name=self.name
+        Ast=LoadData(name,path)
+        self.lines=Ast.lines
+        self.visible=Ast.visible
+        self.shine=Ast.shine
+        self.fixedLines=Ast.fixedLines
 
     def FixLines(self,epsilon=0.001):
         lines1=self.lines
-        print(self.name+"\tFixing Lines, This May Take A While...")
+        print(" "+self.name+"\tFixing Lines, This May Take A While...")
         while Find_Crossed_Lines(lines1,epsilon):
             r=Find_Crossed_Lines(lines1,epsilon)
             lines1.remove(r[1])
             lines1.remove(r[2])
             lines1.extend(r[0])
-        print(self.name+"\tLines Fixed")
+        print(" "+self.name+"\tLines Fixed")
         self.fixedLines=lines1
         return lines1
 
-    def Test_Visibility(self,phase=pi/2,startPhase=0,increment=pi/2,radius=5,epsilon=0.001,save:bool=False)->list:
+    def Test_Visibility(self,phase=pi/2,startPhase=0,increment=pi/2,radius=5,epsilon=0.001)->list:
         import numpy
         from math import sin,cos
         import time
 
         if not self.fixedLines:
             self.FixLines()
-
+            print("")
+        
         print_progress_bar(0,1,prefix=" "+self.name+"\tLine Visibility:\t")
         
         output=[]
@@ -702,22 +711,20 @@ class Asteroid:
             output.append((visible,illuminator,observer))
 
             step=t/increment
+            timeleft=Time_Left(start,time.time(),step,maxSteps)
 
-            print_progress_bar(step,maxSteps,prefix=" "+self.name+"\tLine Visibility:\t",suffix="\t"+str(Time_Left(start,time.time(),step,maxSteps)),message=(" "+self.name+"\tVisibility Finished,\tElapsed Time = "+str(round(time.time()-start,1))))
-        
-        if save:
-            SaveData(output,self.name+"_visibility")
+            print_progress_bar(step,maxSteps,prefix=" "+self.name+"\tLine Visibility:\t",suffix="\t"+dhms(timeleft),message=(" "+self.name+"\tVisibility Finished,\tElapsed Time = "+dhms(time.time()-start)))
 
         self.visible=output
         return output
 
-    def Test_Shine(self,phase=pi/2,startPhase=0,increment=pi/2,radius=5,epsilon=0.001,Density:float=100,save:bool=False)->list:
+    def Test_Shine(self,phase=pi/2,startPhase=0,increment=pi/2,radius=5,epsilon=0.001,Density:float=100)->list:
         
         if not self.visible:
             packets=self.Test_Visibility(phase,startPhase,increment,radius,epsilon)
+            print("")
         else:
             packets=self.visible
-        
         import time
         shines=[]
         start=time.time()
@@ -726,13 +733,16 @@ class Asteroid:
         for l in packets:
             shines.append(Lines_Shine(l,Density))
             step=packets.index(l)
-            print_progress_bar(step,maxSteps,prefix=" "+self.name+"\tLine Shine:\t\t",suffix="\t"+str(Time_Left(start,time.time(),step,maxSteps)),message=(" "+self.name+"\tShine Finished,\t\tElapsed Time = "+str(round(time.time()-start,1))))
-        
-        if save:
-            SaveData(shines,self.name+"_shine")
 
+            timeleft=Time_Left(start,time.time(),step,maxSteps)
+            
+            print_progress_bar(step,maxSteps,prefix=" "+self.name+"\tLine Shine:\t\t",suffix="\t"+dhms(timeleft),message=(" "+self.name+"\tShine Finished,\t\tElapsed Time = "+dhms(time.time()-start)))
+        print("")
         self.shine=shines
         return shines
+
+    def Test(self):
+        return self.Test_Shine(self.phase,self.startPhase,self.increment,self.radius,self.epsilon,self.Density)
 
     def Multi_Thread_Visibility(self,phase=pi/2,startPhase=0,increment=pi/2,radius=5,epsilon=0.001):
         import numpy
@@ -752,7 +762,7 @@ class Asteroid:
                 output.append((t.result(),illuminator,observer))
             print("Threads worked")
             return output
-                
+
 def Lines_Not_Matching(lines:list,epsilon=0.001)->list:
     output=[]
     if lines is not None:
@@ -775,10 +785,31 @@ def Find_Connected_Lines(lines:list,epsilon=0.001)->tuple:
                 if newline:
                     return((newline,line,line1))
 
-def Connect_Lines(lines:list,epsilon=0.001)->list:
+def Find_Visibly_Connected_Lines(lines:list,ref,epsilon=0.001)->tuple:
+    for line in lines:
+        for line1 in lines:
+            if line is not line1:
+                newline=ref.Visibly_Connected_Lines(line,line1,epsilon)
+                if newline:
+                    return((newline,line,line1))
+
+def Find_Crossed_Lines(lines:list,epsilon=0.001)->tuple:
+    for line in lines:
+        for line1 in lines:
+            if line is not line1:
+                newlines=line.Divide(line1,epsilon)
+                if newlines:
+                    return((newlines,line,line1))
+
+def Connect_Lines(lines:list,ref,epsilon=0.001)->list:
     lines1=lines
     while Find_Connected_Lines(lines1,epsilon):
         r=Find_Connected_Lines(lines1,epsilon)
+        lines1.remove(r[1])
+        lines1.remove(r[2])
+        lines1.append(r[0])
+    while Find_Visibly_Connected_Lines(lines1,ref,epsilon):
+        r=Find_Visibly_Connected_Lines(lines1,ref,epsilon)
         lines1.remove(r[1])
         lines1.remove(r[2])
         lines1.append(r[0])
@@ -812,7 +843,7 @@ def Visible_Lines_From_Point(lines:list,ref,epsilon=0.001):
 
     for line in lines:
 
-        sectors=Connect_Lines(sectors,epsilon)
+        sectors=Connect_Lines(sectors,ref,epsilon)
 
         sectors=ref.Sort_Lines_By_Distance(sectors) #dobro
 
@@ -889,25 +920,14 @@ def NmbrTrue(bools:list,num:int)->bool:
     else:
         return False
 
-def Find_Crossed_Lines(lines:list,epsilon=0.001)->tuple:
-    for line in lines:
-        for line1 in lines:
-            if line is not line1:
-                newlines=line.Divide(line1,epsilon)
-                if newlines:
-                    return((newlines,line,line1))
-
 def Filter(data:list,cutoff:float=125)->list:
     from scipy import signal
     import numpy
     data=numpy.array(data)
     b, a = signal.butter(8, cutoff/1000)
-    y1 = signal.filtfilt(b, a, data, padlen=len(data)-1)
-    b, a = signal.ellip(4, 0.01, 120, 0.125)
-    y2 = signal.filtfilt(b, a, data, method="gust")
-    y3 = signal.filtfilt(b, a, data, padlen=50)
+    y = signal.filtfilt(b, a, data, padlen=len(data)-1)
 
-    return (list(y1),list(y2),list(y3))
+    return list(y)
 
 def Shutdown():
     import os
@@ -917,6 +937,13 @@ def f(formula,**kwargs):
     import sympy
     expr=sympy.sympify(formula)
     return expr.evalf(subs=kwargs)
+
+def dhms(seconds)->str:
+    s=str(round(seconds%60,2))
+    m=str(int((seconds//60)%60))
+    h=str(int((seconds//3600)%24))
+    d=str(int(seconds//(3600*24)))
+    return(d+" d  "+h+" h  "+m+" min  "+s+" s")
 
 """def Valid_Lines(lines:list,epsilon=0.001)->list:
     lines1=lines
