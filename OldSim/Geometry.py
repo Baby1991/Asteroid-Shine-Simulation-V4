@@ -599,7 +599,7 @@ class Asteroid:
     def Line(self,line):
         self.lines.append(line)
 
-    def Circle(self,p=0,q=0,a=1,b=1,start=0*pi,end=2*pi,increment=1/4*pi,SignificantDigits=6):
+    def Ellipse(self,p=0,q=0,a=1,b=1,start=0*pi,end=2*pi,increment=1/4*pi,SignificantDigits=6):
         from math import pi,cos,sin
         import numpy
         lines=[]
@@ -748,13 +748,8 @@ class Asteroid:
                 #Visible_Line_From_Both_Points(self.fixedLines,observer,illuminator,epsilon)
                 threads.append((executor.submit(Visible_Line_From_Both_Points,(self.fixedLines,observer,illuminator,epsilon)),illuminator,observer))
             print("Generated threads")
-            while True:
-                try:
-                    for t,illuminator,observer in threads:
-                        output.append((t.result(),illuminator,observer))
-                    break
-                except:
-                    pass
+            for t,illuminator,observer in threads:
+                output.append((t.result(),illuminator,observer))
             print("Threads worked")
             return output
                 
@@ -907,8 +902,12 @@ def Filter(data:list,cutoff:float=125)->list:
     import numpy
     data=numpy.array(data)
     b, a = signal.butter(8, cutoff/1000)
-    y = signal.filtfilt(b, a, data, padlen=len(data)-1)
-    return list(y)
+    y1 = signal.filtfilt(b, a, data, padlen=len(data)-1)
+    b, a = signal.ellip(4, 0.01, 120, 0.125)
+    y2 = signal.filtfilt(b, a, data, method="gust")
+    y3 = signal.filtfilt(b, a, data, padlen=50)
+
+    return (list(y1),list(y2),list(y3))
 
 def Shutdown():
     import os
