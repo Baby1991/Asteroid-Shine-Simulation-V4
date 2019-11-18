@@ -16,10 +16,6 @@ ast.Test()
 ast.Save()
 #Shutdown()
 
-for x in ast.visible[0][0]:
-    print(round(x,2))
-    print(x.Lenght())
-
 #ast.Plot().Save(ast.name)
 plot=Graph()
 plot.Lines(ast.lines,linewidth=7)

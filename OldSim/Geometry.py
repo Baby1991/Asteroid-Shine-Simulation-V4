@@ -851,6 +851,8 @@ def Lines_vs_Sectors(lines:list,sectors:list,ref,epsilon=0.001)->list:
 
 def Visible_Lines_From_Point(lines:list,ref,epsilon=0.001):
     
+    print(And_Lines(lines,lines))
+
     lines=ref.Sort_Lines_By_Distance(lines) #dobro
     sectors=[lines[0]] #dobro
     visible=[lines[0]] #dobro
@@ -868,7 +870,7 @@ def Visible_Lines_From_Point(lines:list,ref,epsilon=0.001):
 
         sectors=ref.Sort_Lines_By_Distance(sectors) #dobro
 
-        temp=line.vs_Sect(sectors,ref,epsilon) #dobro
+        temp=line.vs_Sect(sectors,ref,epsilon) #dobro   
 
         if temp is not None:
             sectors.extend(temp)
