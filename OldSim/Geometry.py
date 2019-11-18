@@ -688,17 +688,40 @@ class Asteroid:
         self.shine=Ast.shine
         self.fixedLines=Ast.fixedLines
 
-    def FixLines(self,epsilon=0.001):
+    def FixLines(self,epsilon=0.001,radius=5,increment=pi/2):
+        import numpy
+        from math import sin,cos,pi
+        import time
+
         lines1=self.lines
         print(" "+self.name+"\tFixing Lines, This May Take A While...")
+
         while Find_Crossed_Lines(lines1,epsilon):
             r=Find_Crossed_Lines(lines1,epsilon)
             lines1.remove(r[1])
             lines1.remove(r[2])
             lines1.extend(r[0])
+
+        #visible=[]
+        output=[]
+
+        start=time.time()
+        for t in numpy.arange(0,2*pi,increment):
+            timeleft=Time_Left(start,time.time(),t,2*pi-increment)
+            print_progress_bar(t,2*pi-increment,suffix="\t"+dhms(timeleft)+"\t")
+            point=Point(radius*cos(t),radius*sin(t))
+            visible=Visible_Lines_From_Point(lines1,point,epsilon,connect=False)
+            for l in visible:
+                for j in lines1:
+                    temp=l.And(j,epsilon)
+                    if temp:
+                        if temp.Return_Not_Zero(epsilon):
+                            if not any([p.Match(j,epsilon) for p in output]):
+                                output.append(j)
+
         print(" "+self.name+"\tLines Fixed")
-        self.fixedLines=lines1
-        return lines1
+        self.fixedLines=output
+        return output
 
     def Test_Visibility(self,phase=pi/2,startPhase=0,increment=pi/2,radius=5,epsilon=0.001)->list:
         import numpy
@@ -706,7 +729,7 @@ class Asteroid:
         import time
 
         if not self.fixedLines:
-            self.FixLines()
+            self.FixLines(increment)
             print("")
         
         print_progress_bar(0,1,prefix=" "+self.name+"\tLine Visibility:\t")
@@ -849,7 +872,7 @@ def Lines_vs_Sectors(lines:list,sectors:list,ref,epsilon=0.001)->list:
             break
     return temp
 
-def Visible_Lines_From_Point(lines:list,ref,epsilon=0.001):
+def Visible_Lines_From_Point(lines:list,ref,epsilon=0.001,connect=True):
 
     lines=ref.Sort_Lines_By_Distance(lines) #dobro
     sectors=[lines[0]] #dobro
@@ -857,10 +880,10 @@ def Visible_Lines_From_Point(lines:list,ref,epsilon=0.001):
     lines.pop(0) #dobro
 
     for line in lines:
+        if connect:
+            sectors=Connect_Lines(sectors,ref,epsilon) #ne funkcionise
 
-        #sectors=Connect_Lines(sectors,ref,epsilon)
-
-        #sectors=ref.Sort_Lines_By_Distance(sectors) #dobro
+        sectors=ref.Sort_Lines_By_Distance(sectors) #dobro
 
         temp=line.vs_Sect(sectors,ref,epsilon) #dobro   
 
@@ -878,7 +901,8 @@ def And_Lines(lines1:list,lines2:list,epsilon=0.001):# ne radi / duple linije
             if line1.And(line2,epsilon):
                 temp=line1.And(line2,epsilon).Return_Not_Zero(epsilon)
                 if temp is not None:
-                    output.append(temp)     
+                    output.append(temp)
+    output=Remove_Matching_Lines(output,epsilon)
     #print(Find_Matching_Lines(output)) 
     return output
 
@@ -887,7 +911,7 @@ def Visible_Line_From_Both_Points(lines:list,p1,p2,epsilon=0.001):
     visible2=Visible_Lines_From_Point(lines,p2,epsilon)
     return And_Lines(visible1,visible2,epsilon)
 
-def print_progress_bar(iteration, total, prefix='', suffix='', decimals=1, length=100, fill='█',message=''):
+def print_progress_bar(iteration, total, prefix='', suffix='', decimals=1, length=50, fill='█',message=''):
     percent = ("{0:." + str(decimals) + "f}").format(100 *
                                                      (iteration / float(total)))
     filledLength = int(length * iteration // total)
@@ -974,7 +998,15 @@ def Find_Matching_Lines(lines,epsilon=0.001):
             if line is not line1:
                 newlines=line.Match(line1,epsilon)
                 if newlines:
-                    return((newlines,line,line1))
+                    return (newlines,line,line1)
+
+def Remove_Matching_Lines(lines,epsilon=0.001):
+    lines1=lines
+    while Find_Matching_Lines(lines1,epsilon) is not None:
+        temp,_,line=Find_Matching_Lines(lines1,epsilon)
+        if temp:
+            lines1.remove(line)
+    return lines1
 
 """def Valid_Lines(lines:list,epsilon=0.001)->list:
     lines1=lines
