@@ -2,7 +2,7 @@
 
 from math import pi
 
-class Point:
+class Point:    
     x=0
     y=0
 
@@ -43,7 +43,19 @@ class Point:
                 line)
                 )
 
-        lines_with_dist.sort(key = operator.itemgetter(0))
+        for i in range(len(lines_with_dist)):
+            lowest_value_index = i
+            for j in range(i + 1, len(lines_with_dist)):
+                if lines_with_dist[j][0] < lines_with_dist[lowest_value_index][0]:
+                    lowest_value_index = j
+                elif lines_with_dist[j][0] == lines_with_dist[lowest_value_index][0]:
+                    l1=lines_with_dist[j][1]
+                    l0=lines_with_dist[lowest_value_index][1]
+                    a1=self.Angle_Points(l1.start,l1.end)
+                    a0=self.Angle_Points(l0.start,l0.end)
+                    if a1<a0: 
+                        lowest_value_index = j
+            lines_with_dist[i], lines_with_dist[lowest_value_index] = lines_with_dist[lowest_value_index], lines_with_dist[i]
 
         for i in lines_with_dist:
             lines1.append(i[1])
@@ -581,6 +593,9 @@ class Graph:
             x=numpy.arange(len(values))
         self.ax.plot(x,values,marker=marker,color=color)
 
+    def Text(self,text:str="",x:float=0,y:float=0):
+        self.ax.text(x,y,text)
+
     def Save(self,name,path="",extenstion="png"):
         from matplotlib.pyplot import savefig
         import os
@@ -842,8 +857,14 @@ def Visible_Lines_From_Point(lines:list,ref,epsilon=0.001):
     lines.pop(0) #dobro
     CountUnique(lines)
     for line in lines:
+        """plot=Graph()
+        plot.Lines(lines,linewidth=7)
+        plot.Lines(visible,linewidth=5,color="red")
+        plot.Lines(sectors,linewidth=3,color="blue")
+        plot.Line(line,linewidth=1,color="green")
+        Graph.Show()"""
 
-        sectors=Connect_Lines(sectors,ref,epsilon)
+        #sectors=Connect_Lines(sectors,ref,epsilon)
 
         sectors=ref.Sort_Lines_By_Distance(sectors) #dobro
 
@@ -950,6 +971,18 @@ def CountUnique(data):
     print(Counter(data).keys())
     print(Counter(data).values())
 
+def Sort(nums):
+    # This value of i corresponds to how many values were sorted
+    for i in range(len(nums)):
+        # We assume that the first item of the unsorted segment is the smallest
+        lowest_value_index = i
+        # This loop iterates over the unsorted items
+        for j in range(i + 1, len(nums)):
+            if nums[j] < nums[lowest_value_index]:
+                lowest_value_index = j
+        # Swap values of the lowest unsorted element with the first unsorted
+        # element
+        nums[i], nums[lowest_value_index] = nums[lowest_value_index], nums[i]
 
 """def Valid_Lines(lines:list,epsilon=0.001)->list:
     lines1=lines
