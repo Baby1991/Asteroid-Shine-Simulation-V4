@@ -840,7 +840,7 @@ def Visible_Lines_From_Point(lines:list,ref,epsilon=0.001):
     sectors=[lines[0]] #dobro
     visible=[lines[0]] #dobro
     lines.pop(0) #dobro
-
+    CountUnique(lines)
     for line in lines:
 
         sectors=Connect_Lines(sectors,ref,epsilon)
@@ -944,6 +944,12 @@ def dhms(seconds)->str:
     h=str(int((seconds//3600)%24))
     d=str(int(seconds//(3600*24)))
     return(d+" d  "+h+" h  "+m+" min  "+s+" s")
+
+def CountUnique(data):
+    from collections import Counter
+    print(Counter(data).keys())
+    print(Counter(data).values())
+
 
 """def Valid_Lines(lines:list,epsilon=0.001)->list:
     lines1=lines
