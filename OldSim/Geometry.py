@@ -855,7 +855,7 @@ def Visible_Lines_From_Point(lines:list,ref,epsilon=0.001):
     sectors=[lines[0]] #dobro
     visible=[lines[0]] #dobro
     lines.pop(0) #dobro
-    CountUnique(lines)
+
     for line in lines:
         """plot=Graph()
         plot.Lines(lines,linewidth=7)
@@ -873,7 +873,6 @@ def Visible_Lines_From_Point(lines:list,ref,epsilon=0.001):
         if temp is not None:
             sectors.extend(temp)
             visible.extend(temp)
-
     return visible
 
 def And_Lines(lines1:list,lines2:list,epsilon=0.001):
@@ -941,14 +940,14 @@ def NmbrTrue(bools:list,num:int)->bool:
     else:
         return False
 
-def Filter(data:list,cutoff:float=125)->list:
-    from scipy import signal
-    import numpy
-    data=numpy.array(data)
-    b, a = signal.butter(8, cutoff/1000)
-    y = signal.filtfilt(b, a, data, padlen=len(data)-1)
+    def Filter(data:list,cutoff:float=125)->list:
+        from scipy import signal
+        import numpy
+        data=numpy.array(data)
+        b, a = signal.butter(8, cutoff/1000)
+        y = signal.filtfilt(b, a, data, padlen=len(data)-1)
 
-    return list(y)
+        return list(y)
 
 def Shutdown():
     import os
@@ -966,22 +965,12 @@ def dhms(seconds)->str:
     d=str(int(seconds//(3600*24)))
     return(d+" d  "+h+" h  "+m+" min  "+s+" s")
 
-def CountUnique(data):
-    from collections import Counter
-    print(Counter(data).keys())
-    print(Counter(data).values())
-
 def Sort(nums):
-    # This value of i corresponds to how many values were sorted
     for i in range(len(nums)):
-        # We assume that the first item of the unsorted segment is the smallest
         lowest_value_index = i
-        # This loop iterates over the unsorted items
         for j in range(i + 1, len(nums)):
             if nums[j] < nums[lowest_value_index]:
                 lowest_value_index = j
-        # Swap values of the lowest unsorted element with the first unsorted
-        # element
         nums[i], nums[lowest_value_index] = nums[lowest_value_index], nums[i]
 
 """def Valid_Lines(lines:list,epsilon=0.001)->list:
