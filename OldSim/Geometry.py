@@ -399,7 +399,7 @@ class Line:
         A2=self.start.Area_Triangle(self.end,line.end)
         return A1+A2"""
         
-    def And(self,line,epsilon=0.001):   
+    def And(self,line,epsilon=0.001):
 
         l1=self.On_Line(line.start,epsilon)
         l2=self.On_Line(line.end,epsilon)
@@ -722,7 +722,7 @@ class Asteroid:
             illuminator=Point(radius*cos(t+phase),radius*sin(t+phase))
             
             visible=Visible_Line_From_Both_Points(self.fixedLines,observer,illuminator,epsilon)
-
+            
             output.append((visible,illuminator,observer))
 
             step=t/increment
@@ -850,8 +850,6 @@ def Lines_vs_Sectors(lines:list,sectors:list,ref,epsilon=0.001)->list:
     return temp
 
 def Visible_Lines_From_Point(lines:list,ref,epsilon=0.001):
-    
-    print(And_Lines(lines,lines))
 
     lines=ref.Sort_Lines_By_Distance(lines) #dobro
     sectors=[lines[0]] #dobro
@@ -859,34 +857,29 @@ def Visible_Lines_From_Point(lines:list,ref,epsilon=0.001):
     lines.pop(0) #dobro
 
     for line in lines:
-        """plot=Graph()
-        plot.Lines(lines,linewidth=7)
-        plot.Lines(visible,linewidth=5,color="red")
-        plot.Lines(sectors,linewidth=3,color="blue")
-        plot.Line(line,linewidth=1,color="green")
-        Graph.Show()"""
 
         #sectors=Connect_Lines(sectors,ref,epsilon)
 
-        sectors=ref.Sort_Lines_By_Distance(sectors) #dobro
+        #sectors=ref.Sort_Lines_By_Distance(sectors) #dobro
 
         temp=line.vs_Sect(sectors,ref,epsilon) #dobro   
 
         if temp is not None:
             sectors.extend(temp)
             visible.extend(temp)
+    
     return visible
 
-def And_Lines(lines1:list,lines2:list,epsilon=0.001):
+def And_Lines(lines1:list,lines2:list,epsilon=0.001):# ne radi / duple linije
+    #print(Find_Matching_Lines(lines1),Find_Matching_Lines(lines2)) 
     output=[]
     for line1 in lines1:
         for line2 in lines2:
             if line1.And(line2,epsilon):
                 temp=line1.And(line2,epsilon).Return_Not_Zero(epsilon)
                 if temp is not None:
-                    output.append(temp)
-    
-    #print(len(lines1),len(lines2),len(output),len(output1))        
+                    output.append(temp)     
+    #print(Find_Matching_Lines(output)) 
     return output
 
 def Visible_Line_From_Both_Points(lines:list,p1,p2,epsilon=0.001):
@@ -942,14 +935,14 @@ def NmbrTrue(bools:list,num:int)->bool:
     else:
         return False
 
-    def Filter(data:list,cutoff:float=125)->list:
-        from scipy import signal
-        import numpy
-        data=numpy.array(data)
-        b, a = signal.butter(8, cutoff/1000)
-        y = signal.filtfilt(b, a, data, padlen=len(data)-1)
+def Filter(data:list,cutoff:float=125)->list:
+    from scipy import signal
+    import numpy
+    data=numpy.array(data)
+    b, a = signal.butter(8, cutoff/1000)
+    y = signal.filtfilt(b, a, data, padlen=len(data)-1)
 
-        return list(y)
+    return list(y)
 
 def Shutdown():
     import os
@@ -974,6 +967,14 @@ def Sort(nums):
             if nums[j] < nums[lowest_value_index]:
                 lowest_value_index = j
         nums[i], nums[lowest_value_index] = nums[lowest_value_index], nums[i]
+
+def Find_Matching_Lines(lines,epsilon=0.001):
+    for line in lines:
+        for line1 in lines:
+            if line is not line1:
+                newlines=line.Match(line1,epsilon)
+                if newlines:
+                    return((newlines,line,line1))
 
 """def Valid_Lines(lines:list,epsilon=0.001)->list:
     lines1=lines
