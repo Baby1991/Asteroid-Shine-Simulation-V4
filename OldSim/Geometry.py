@@ -62,12 +62,13 @@ class Point:
 
         return lines1
 
-    def Angle_Points(self,p1,p2,epsilon=0.001)->float:
-        from math import atan2
+    def Angle_Points(self,p1,p2)->float:
+        #from math import atan2
+        theta1 = atan3(p1.y-self.y,p1.x-self.x)
+        theta2 = atan3(p2.y-self.y,p2.x-self.x)
+        diff=abs(theta1-theta2)
         return(
-            atan2(p2.y-self.y,p2.x-self.x)
-            -
-            atan2(p1.y-self.y,p1.x-self.x)
+            diff
             )
 
     def Distance(self,p)->float:
@@ -186,7 +187,7 @@ class Line:
         x=self.start.x
         return(y-self.Slope()*x)
     
-    def Angle_Lines(self,Line2,epsilon=0.001)->float:
+    """def Angle_Lines(self,Line2,epsilon=0.001)->float:
         import math
         return(
             math.atan(
@@ -196,10 +197,10 @@ class Line:
                 (1+(self.k*Line2.k))
                 )
                 )
-                )
+                )"""
     
-    def Check_S_E_Match(self,epsilon=0.001)->bool:
-        return self.start.Match(self.end,epsilon)
+    """def Check_S_E_Match(self,epsilon=0.001)->bool:
+        return self.start.Match(self.end,epsilon)"""
 
     def Intercept_Line2(self,Line1,epsilon=0.001)->Point:
         line1=(self.start(),self.end())
@@ -467,19 +468,40 @@ class Line:
             return None"""
 
     def Continued(self,line,epsilon=0.001)->bool:
-        l1=self.start.Match(line.start,epsilon)
-        l2=self.start.Match(line.end,epsilon)
-        l3=self.end.Match(line.start,epsilon)
-        l4=self.end.Match(line.end,epsilon)
-        l=[l1,l2,l3,l4]
+        
+        if self.Match(line,epsilon):
+            return False
 
-        r1=self.On_Line(line.start,epsilon)
-        r2=self.On_Line(line.end,epsilon)
-        r3=line.On_Line(self.start,epsilon)
-        r4=line.On_Line(self.end,epsilon)
-        r=[r1,r2,r3,r4]
+        if self.start.Match(line.start,epsilon):
+            start=self.end
+            middle=self.start
+            end=line.end
+        elif self.start.Match(line.end,epsilon):
+            start=self.end
+            middle=self.start
+            end=line.start
+        elif self.end.Match(line.start,epsilon):
+            start=self.start
+            middle=self.end
+            end=line.end
+        elif self.end.Match(line.end,epsilon):
+            start=self.start
+            middle=self.end
+            end=line.start
+        else:
+            return False
 
-        return NmbrTrue(l,1) and NmbrTrue(r,2)
+        a0,b0=start()
+        a1,b1=middle()
+        a2,b2=end()
+
+        if abs(b2-b0)<=epsilon:
+            a0,a1,a2,b0,b1,b2=b0,b1,b2,a0,a1,a2
+            
+        a=abs(a2-a1-(b2-b1)/(b2-b0)*(a2-a0))<=epsilon
+        b=(b2-b0)>(b1-b0)
+        
+        return not a or b
 
     def Divide(self,line,epsilon=0.001)->list:
         if not self.Continued(line,epsilon):
@@ -695,14 +717,13 @@ class Asteroid:
 
         lines1=self.lines
         print(" "+self.name+"\tFixing Lines, This May Take A While...")
-
-        while Find_Crossed_Lines(lines1,epsilon):
+        fullstart=time.time()
+        while Find_Crossed_Lines(lines1,epsilon): #NE RADI
             r=Find_Crossed_Lines(lines1,epsilon)
             lines1.remove(r[1])
             lines1.remove(r[2])
             lines1.extend(r[0])
-
-        #visible=[]
+        
         output=[]
 
         start=time.time()
@@ -710,28 +731,46 @@ class Asteroid:
             timeleft=Time_Left(start,time.time(),t,2*pi-increment)
             print_progress_bar(t,2*pi-increment,suffix="\t"+dhms(timeleft)+"\t")
             point=Point(radius*cos(t),radius*sin(t))
-            visible=Visible_Lines_From_Point(lines1,point,epsilon,connect=False)
-            for l in visible:
-                for j in lines1:
-                    temp=l.And(j,epsilon)
-                    if temp:
-                        if temp.Return_Not_Zero(epsilon):
-                            if not any([p.Match(j,epsilon) for p in output]):
-                                output.append(j)
+            visible=Visible_Lines_From_Point(lines1,point,epsilon,connect=True)
 
-        print(" "+self.name+"\tLines Fixed")
+            """plot=Graph()        
+            plot.Lines(lines1,linewidth=5)
+            plot.Lines(visible,linewidth=3,color="blue")
+            Graph.Show()"""
+
+            for j in lines1:
+                for l in visible:
+
+                    if not j.Continued(l,epsilon):
+                        temp=l.And(j,epsilon)
+
+                        if temp:
+                            
+                            if temp.Return_Not_Zero(epsilon):
+                                
+                                """plot=Graph()
+                                
+                                plot.Lines(lines1,linewidth=5)
+                                plot.Lines(output,linewidth=3,color="blue")
+                                plot.Line(temp,linewidth=1,color="red")
+                                Graph.Show()"""
+
+                                if not any([p.Match(j,epsilon) for p in output]):
+                                    output.append(j)
+
+                        
+        print(" "+self.name+"\tLines Fixed\tElapsed time:\t"+dhms(time.time()-fullstart))
         self.fixedLines=output
         return output
 
-    def Test_Visibility(self,phase=pi/2,startPhase=0,increment=pi/2,radius=5,epsilon=0.001)->list:
+    def Test_Visibility(self,phase=pi/2,startPhase=0,increment=pi/2,radius=5,epsilon=0.001,force:bool=False)->list:
         import numpy
         from math import sin,cos
         import time
 
-        if not self.fixedLines:
-            self.FixLines(increment)
-            print("")
-        
+        if not self.fixedLines or force:
+            self.FixLines(epsilon,radius,increment)
+        print("")
         print_progress_bar(0,1,prefix=" "+self.name+"\tLine Visibility:\t")
         
         output=[]
@@ -751,15 +790,22 @@ class Asteroid:
             step=t/increment
             timeleft=Time_Left(start,time.time(),step,maxSteps)
 
+            """plot=Graph()
+            plot.Lines(self.fixedLines,linewidth=5)
+            plot.Lines(visible,color="red")
+            plot.Point(illuminator)
+            plot.Point(observer)
+            plot.Save(str(step))"""
+
             print_progress_bar(step,maxSteps,prefix=" "+self.name+"\tLine Visibility:\t",suffix="\t"+dhms(timeleft),message=(" "+self.name+"\tVisibility Finished,\tElapsed Time = "+dhms(time.time()-start)))
 
         self.visible=output
         return output
 
-    def Test_Shine(self,phase=pi/2,startPhase=0,increment=pi/2,radius=5,epsilon=0.001,Density:float=100)->list:
+    def Test_Shine(self,phase=pi/2,startPhase=0,increment=pi/2,radius=5,epsilon=0.001,Density:float=100,force:bool=False)->list:
         
-        if not self.visible:
-            packets=self.Test_Visibility(phase,startPhase,increment,radius,epsilon)
+        if not self.visible or force:
+            packets=self.Test_Visibility(phase,startPhase,increment,radius,epsilon,force)
             print("")
         else:
             packets=self.visible
@@ -779,10 +825,15 @@ class Asteroid:
         self.shine=shines
         return shines
 
-    def Test(self):
-        return self.Test_Shine(self.phase,self.startPhase,self.increment,self.radius,self.epsilon,self.Density)
+    def Test(self,force:bool=0):
+        import time
+        start=time.time()
+        self.Test_Shine(self.phase,self.startPhase,self.increment,self.radius,self.epsilon,self.Density,force)
+        elapsed=time.time()-start
+        print("Elapsed time:\t"+dhms(elapsed))
+        return self.shine
 
-    def Multi_Thread_Visibility(self,phase=pi/2,startPhase=0,increment=pi/2,radius=5,epsilon=0.001):
+    """def Multi_Thread_Visibility(self,phase=pi/2,startPhase=0,increment=pi/2,radius=5,epsilon=0.001):
         import numpy
         from math import sin,cos
         import concurrent.futures
@@ -799,7 +850,7 @@ class Asteroid:
             for t,illuminator,observer in threads:
                 output.append((t.result(),illuminator,observer))
             print("Threads worked")
-            return output
+            return output"""
 
 def Lines_Not_Matching(lines:list,epsilon=0.001)->list:
     output=[]
@@ -879,18 +930,35 @@ def Visible_Lines_From_Point(lines:list,ref,epsilon=0.001,connect=True):
     visible=[lines[0]] #dobro
     lines.pop(0) #dobro
 
+    #max_ang,p1,p2=Max_Angular_Width(lines,ref) #proveriti
+    #sectors.append(Line(p1,p2))
+    #print(max_ang)
+    #i=0
     for line in lines:
-        if connect:
-            sectors=Connect_Lines(sectors,ref,epsilon) #ne funkcionise
 
-        sectors=ref.Sort_Lines_By_Distance(sectors) #dobro
+        """plot=Graph()
+        plot.Lines(lines,linewidth=5)
+        plot.Lines(sectors,linewidth=3,color="blue")
+        plot.Lines(visible,linewidth=1,color="red")
+        plot.Line(line,linewidth=1,color="green")
+        plot.Save(str(i))"""
+
+        if connect:
+            sectors=Connect_Lines(sectors,ref,epsilon)
+
+        """if sectors[0].Match(Line(p1,p2),epsilon): #proveriti
+            break"""
+
+        #sectors=ref.Sort_Lines_By_Distance(sectors) #dobro
 
         temp=line.vs_Sect(sectors,ref,epsilon) #dobro   
 
         if temp is not None:
             sectors.extend(temp)
             visible.extend(temp)
-    
+
+        #i+=1
+
     return visible
 
 def And_Lines(lines1:list,lines2:list,epsilon=0.001):# ne radi / duple linije
@@ -949,7 +1017,7 @@ def LoadData(name:str,path:str="")->list:
     print("\tData loaded from:\t"+loadFile)
     return data
 
-def NmbrTrue(bools:list,num:int)->bool:
+"""def NmbrTrue(bools:list,num:int)->bool:
     i=0
     for t in bools:
         if t:
@@ -957,7 +1025,7 @@ def NmbrTrue(bools:list,num:int)->bool:
     if i==num:
         return True
     else:
-        return False
+        return False"""
 
 def Filter(data:list,cutoff:float=125)->list:
     from scipy import signal
@@ -984,7 +1052,7 @@ def dhms(seconds)->str:
     d=str(int(seconds//(3600*24)))
     return(d+" d  "+h+" h  "+m+" min  "+s+" s")
 
-def Sort(nums):
+def Sort(nums:list):
     for i in range(len(nums)):
         lowest_value_index = i
         for j in range(i + 1, len(nums)):
@@ -992,22 +1060,65 @@ def Sort(nums):
                 lowest_value_index = j
         nums[i], nums[lowest_value_index] = nums[lowest_value_index], nums[i]
 
-def Find_Matching_Lines(lines,epsilon=0.001):
+def Find_Matching_Lines(lines:list,epsilon=0.001):
     for line in lines:
         for line1 in lines:
             if line is not line1:
                 newlines=line.Match(line1,epsilon)
                 if newlines:
-                    return (newlines,line,line1)
+                    return (line,line1)
 
-def Remove_Matching_Lines(lines,epsilon=0.001):
+def Remove_Matching_Lines(lines:list,epsilon=0.001):
     lines1=lines
     while Find_Matching_Lines(lines1,epsilon) is not None:
-        temp,_,line=Find_Matching_Lines(lines1,epsilon)
-        if temp:
-            lines1.remove(line)
+        _,line=Find_Matching_Lines(lines1,epsilon)
+        lines1.remove(line)
     return lines1
 
+def Find_Matching_Points(points:list,epsilon=0.001):
+    for p1 in points:
+        for p2 in points:
+            if p1 is not p2:
+                if p1.Match(p2,epsilon):
+                    return (p1,p2) 
+
+def Remove_Matching_Points(points:list,epsilon=0.001):
+    points1=points
+    while Find_Matching_Points(points1,epsilon) is not None:
+        _,point=Find_Matching_Points(points1,epsilon)
+        points1.remove(point)
+    return points1
+
+def All_Points(lines:list,epsilon=0.001):
+    points=[]
+    for line in lines:
+        points.append(line.start)
+        points.append(line.end)
+    return Remove_Matching_Points(points,epsilon)
+
+def Max_Angular_Width(lines:list,ref,epsilon=0.001): #PROVERITI
+    import operator
+    points=All_Points(lines,epsilon)
+    sectors=[]
+    for p1 in points:
+        for p2 in points:
+            if not p1.Match(p2,epsilon):
+                ang=ref.Angle_Points(p1,p2)
+                sectors.append((ang,p1,p2))
+    sectors.sort(key=lambda tapl: tapl[0])         
+    return sectors[len(sectors)-1]
+
+def atan3(y:float,x:float,epsilon=0.001)->float:
+    from math import atan,pi
+    from numpy import sign
+    if abs(x)<=epsilon:
+        if abs(y)<=epsilon:
+            return None
+        else:
+            return sign(y)*pi/2
+    else:
+        return atan(y/x)
+        
 """def Valid_Lines(lines:list,epsilon=0.001)->list:
     lines1=lines
     while Find_Crossed_Lines(lines1,epsilon):
