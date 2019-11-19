@@ -801,7 +801,7 @@ class Asteroid:
             plot.Point(observer)
             plot.Save(str(step))"""
 
-            print_progress_bar(step,maxSteps,prefix=" "+self.name+"\tLine Visibility:\t",suffix="\t"+dhms(timeleft),message=(" "+self.name+"\tVisibility Finished,\tElapsed Time = "+dhms(time.time()-start)))
+            print_progress_bar(step,maxSteps,prefix=" "+self.name+"\tLine Visibility:\t",suffix="\t"+dhms(timeleft)+"\t",message=(" "+self.name+"\tVisibility Finished,\tElapsed Time = "+dhms(time.time()-start)))
 
         self.visible=output
         return output
@@ -824,7 +824,7 @@ class Asteroid:
 
             timeleft=Time_Left(start,time.time(),step,maxSteps)
             
-            print_progress_bar(step,maxSteps,prefix=" "+self.name+"\tLine Shine:\t\t",suffix="\t"+dhms(timeleft),message=(" "+self.name+"\tShine Finished,\t\tElapsed Time = "+dhms(time.time()-start)))
+            print_progress_bar(step,maxSteps,prefix=" "+self.name+"\tLine Shine:\t\t",suffix="\t"+dhms(timeleft)+"\t",message=(" "+self.name+"\tShine Finished,\t\tElapsed Time = "+dhms(time.time()-start)))
         print("")
         self.shine=shines
         return shines
