@@ -667,6 +667,10 @@ class Asteroid:
     def Line(self,line):
         self.lines.append(line)
 
+    def Lines(self,lines):
+        for line in lines:
+            self.lines.append(line)
+
     def Ellipse(self,p=0,q=0,a=1,b=1,start=0*pi,end=2*pi,increment=1/4*pi,SignificantDigits=6):
         from math import pi,cos,sin
         import numpy
@@ -1016,6 +1020,10 @@ def LoadData(name:str,path:str="")->list:
         data=pickle.load(filehandle)
     print("\tData loaded from:\t"+loadFile)
     return data
+
+def LoadTxt(name:str,split:str="\n",path:str="")->list:
+    with open(path+name) as file:
+        return file.read().split(split)        
 
 """def NmbrTrue(bools:list,num:int)->bool:
     i=0

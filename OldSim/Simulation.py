@@ -3,12 +3,22 @@ from Geometry import *
 from math import pi,cos,sin
 import numpy as np
 
-ast=Asteroid("Asteroid 1",increment=pi/128,phase=0)
+ast=Asteroid("Asteroid 1",increment=pi/32,phase=0)
 
-ast.Ellipse(increment=ast.increment,p=-1)
+text=LoadTxt("cardiotida.txt")
+points=[]
+for txt in text:
+    x,y=txt.split(',')
+    points.append(Point(float(x),float(y)))
+lines=[]
+for i in range(-1,len(points)-1):
+    lines.append(Line(points[i],points[i+1]))
+ast.Lines(lines)
+
+"""ast.Ellipse(increment=ast.increment,p=-1)
 ast.Ellipse(increment=ast.increment,p=1)
 ast.Ellipse(increment=ast.increment,q=-1)
-ast.Ellipse(increment=ast.increment,q=1)
+ast.Ellipse(increment=ast.increment,q=1)"""
 #ast.Ellipse(increment=ast.increment)
 #ast.Load("Asteroid 1")
 
