@@ -14,7 +14,7 @@ class Point:
     def __repr__(self):
         return repr(self.value) 
     
-    def __call__(self)->tuple:
+    def __call__(self):
         return self.value
 
     def __round__(self,SignificantDigits=0):
@@ -23,7 +23,7 @@ class Point:
     def __sub__(self,p):
         return Point(self.x-p.x,self.y-p.y)
 
-    def Match(self,p2,epsilon=0.001)->bool:
+    def Match(self,p2,epsilon=0.001):
         import math
         d=math.sqrt(sum([(a - b) ** 2 for a, b in zip(self(), p2())]))
         if(d<=epsilon):
@@ -31,7 +31,7 @@ class Point:
         else:
             return False
 
-    def Sort_Lines_By_Distance(self,lines: list)->list:
+    def Sort_Lines_By_Distance(self,lines):
         import operator
         
         lines_with_dist=[]
@@ -62,7 +62,7 @@ class Point:
 
         return lines1
 
-    def Angle_Points(self,p1,p2)->float:
+    def Angle_Points(self,p1,p2):
         #from math import atan2
         theta1 = atan3(p1.y-self.y,p1.x-self.x)
         theta2 = atan3(p2.y-self.y,p2.x-self.x)
@@ -71,7 +71,7 @@ class Point:
             diff
             )
 
-    def Distance(self,p)->float:
+    def Distance(self,p):
         from math import sqrt
         return sqrt((self.x - p.x)**2 + (self.y - p.y)**2)
 
@@ -117,7 +117,7 @@ class Line:
     def __repr__(self):
         return repr(self.value)
     
-    def __call__(self)->tuple:
+    def __call__(self):
         return self.value
 
     def __round__(self,SignificantDigits=0):
@@ -127,14 +127,14 @@ class Line:
         p2=Point(round(p2()[0],SignificantDigits),round(p2()[1],SignificantDigits))
         return Line(p1,p2)
 
-    def To_Tuple(self)->tuple:
+    def To_Tuple(self):
         x0=self.start.x
         y0=self.start.y
         x1=self.end.x
         y1=self.end.y
         return((x0,y0),(x1,y1))
 
-    def Lenght(self)->float:
+    def Lenght(self):
         import math
         return(
                 math.sqrt(
@@ -144,7 +144,7 @@ class Line:
                 )
             )
 
-    def Midpoint(self)->Point:
+    def Midpoint(self):
         return(
             Point(
                 (self.end.x+self.start.x)/2,
@@ -152,10 +152,10 @@ class Line:
                 )
             )
 
-    def On_Line(self,p,epsilon=0.001)->bool:
+    def On_Line(self,p,epsilon=0.001):
         return self.start.Distance(p)+self.end.Distance(p)-self.start.Distance(self.end)<=epsilon
     
-    def Match(self,line,epsilon=0.001)->bool:
+    def Match(self,line,epsilon=0.001):
         if (
             self.start.Match(line.start,epsilon) 
             and 
@@ -169,20 +169,20 @@ class Line:
         else:
             return False
 
-    def Angle_Of_Slope(self)->float:
+    def Angle_Of_Slope(self):
         import math
         p1,p2=self()
         x1,y1=p1()
         x2,y2=p2()
         return math.atan2((y2-y1),(x2-x1))
 
-    def Slope(self)->float:
+    def Slope(self):
         import math
         return(
             math.tan(self.Angle_Of_Slope())
             )
 
-    def yIntercept(self)->float:
+    def yIntercept(self):
         y=self.start.y
         x=self.start.x
         return(y-self.Slope()*x)
@@ -202,7 +202,7 @@ class Line:
     """def Check_S_E_Match(self,epsilon=0.001)->bool:
         return self.start.Match(self.end,epsilon)"""
 
-    def Intercept_Line2(self,Line1,epsilon=0.001)->Point:
+    def Intercept_Line2(self,Line1,epsilon=0.001):
         line1=(self.start(),self.end())
         line2=(Line1.start(),Line1.end())
 
@@ -222,7 +222,7 @@ class Line:
             y = det(d, ydiff) / div
             return Point(x, y)
 
-    def Intercept_Segment2(self,Line2,epsilon=0.001)->Point:
+    def Intercept_Segment2(self,Line2,epsilon=0.001):
         p=self.Intercept_Line2(Line2,epsilon)
         if p:
             if self.On_Line(p) and Line2.On_Line(p):
@@ -232,7 +232,7 @@ class Line:
         else: 
             return None
 
-    def Intercept_Segment_Line(self,Line2,epsilon=0.001)->Point:
+    def Intercept_Segment_Line(self,Line2,epsilon=0.001):
         p=self.Intercept_Line2(Line2,epsilon)
         if p:
             if self.On_Line(p):
@@ -242,7 +242,7 @@ class Line:
         else: 
             return None
 
-    def Distance_To_Point(self,p,epsilon=0.001)->float:
+    def Distance_To_Point(self,p,epsilon=0.001):
         from numpy import arccos, array, dot, pi, cross
         from numpy.linalg import det, norm
         
@@ -312,7 +312,7 @@ class Line:
         else:
             return None
 
-    def Visibility(self,occluder,observer,epsilon=0.001)->tuple:
+    def Visibility(self,occluder,observer,epsilon=0.001):
         p1=Line(observer,occluder.start)
         p2=Line(observer,occluder.end)
         l1=Line(observer,self.start)
@@ -392,7 +392,7 @@ class Line:
                 else:
                     return [t1,t2]
                     
-    def vs_Sect(self,sectors,ref,epsilon=0.001)->list:
+    def vs_Sect(self,sectors,ref,epsilon=0.001):
         return Lines_vs_Sectors([self],sectors,ref,epsilon)
 
     """def Area_Lines(self,line)->float:
@@ -467,7 +467,7 @@ class Line:
         else:
             return None"""
 
-    def Continued(self,line,epsilon=0.001)->bool:
+    def Continued(self,line,epsilon=0.001):
         
         if self.Match(line,epsilon):
             return False
@@ -503,7 +503,7 @@ class Line:
         
         return not a or b
 
-    def Divide(self,line,epsilon=0.001)->list:
+    def Divide(self,line,epsilon=0.001):
         if not self.Continued(line,epsilon):
             cross=self.Intercept_Segment2(line,epsilon)
             if cross is not None:
@@ -530,7 +530,7 @@ class Line:
         else:
             return None    
 
-    def Inerpolate(self,Density=100)->list:
+    def Inerpolate(self,Density=100):
         import numpy
         number_of_points=max(int(Density*self.Lenght()),1)
         
@@ -555,11 +555,11 @@ class Line:
 
         return output
 
-    def Closer_Angle(self,p1,ref)->float:
+    def Closer_Angle(self,p1,ref):
         closer_Point=ref.Closer_Point(self.start,self.end)
         return abs(p1.Angle_Points(closer_Point,ref))
 
-    def Point_Shine(self,p,observer,illuminator)->float:
+    def Point_Shine(self,p,observer,illuminator):
         from math import cos
         incline=min(self.Closer_Angle(p,illuminator),pi-self.Closer_Angle(p,illuminator))
         deflection=min(self.Closer_Angle(p,observer),pi-self.Closer_Angle(p,observer))
@@ -569,7 +569,7 @@ class Line:
         (cos(incline)+cos(deflection))
         )
 
-    def Line_Shine(self,observer,illuminator,Density=100,albedo=1)->float:
+    def Line_Shine(self,observer,illuminator,Density=100,albedo=1):
         points=self.Inerpolate(Density)
         shine=0
         for p in points:
@@ -773,7 +773,7 @@ class Asteroid:
         self.fixedLines=output
         return output
 
-    def Test_Visibility(self,phase=pi/2,startPhase=0,increment=pi/2,radius=5,epsilon=0.001,force=False)->list:
+    def Test_Visibility(self,phase=pi/2,startPhase=0,increment=pi/2,radius=5,epsilon=0.001,force=False):
         import numpy
         from math import sin,cos
         import time
@@ -812,7 +812,7 @@ class Asteroid:
         self.visible=output
         return output
 
-    def Test_Shine(self,phase=pi/2,startPhase=0,increment=pi/2,radius=5,epsilon=0.001,Density=100,force=False)->list:
+    def Test_Shine(self,phase=pi/2,startPhase=0,increment=pi/2,radius=5,epsilon=0.001,Density=100,force=False):
         
         if not self.visible or force:
             packets=self.Test_Visibility(phase,startPhase,increment,radius,epsilon,force)
@@ -835,7 +835,7 @@ class Asteroid:
         self.shine=shines
         return shines
 
-    def Test(self,force:bool=0):
+    def Test(self,force=0):
         import time
         start=time.time()
         self.Test_Shine(self.phase,self.startPhase,self.increment,self.radius,self.epsilon,self.Density,force)
@@ -871,7 +871,7 @@ class Asteroid:
             print("Threads worked")
             return output"""
 
-def Lines_Not_Matching(lines,epsilon=0.001)->list:
+def Lines_Not_Matching(lines,epsilon=0.001):
     output=[]
     if lines is not None:
         for line in lines:
@@ -885,7 +885,7 @@ def Lines_Not_Matching(lines,epsilon=0.001)->list:
     else:
         return None
 
-def Find_Connected_Lines(lines,epsilon=0.001)->tuple:
+def Find_Connected_Lines(lines,epsilon=0.001):
     for line in lines:
         for line1 in lines:
             if line is not line1:
@@ -893,7 +893,7 @@ def Find_Connected_Lines(lines,epsilon=0.001)->tuple:
                 if newline:
                     return((newline,line,line1))
 
-def Find_Visibly_Connected_Lines(lines,ref,epsilon=0.001)->tuple:
+def Find_Visibly_Connected_Lines(lines,ref,epsilon=0.001):
     for line in lines:
         for line1 in lines:
             if line is not line1:
@@ -901,7 +901,7 @@ def Find_Visibly_Connected_Lines(lines,ref,epsilon=0.001)->tuple:
                 if newline:
                     return((newline,line,line1))
 
-def Find_Crossed_Lines(lines,epsilon=0.001)->tuple:
+def Find_Crossed_Lines(lines,epsilon=0.001):
     for line in lines:
         for line1 in lines:
             if line is not line1:
@@ -909,7 +909,7 @@ def Find_Crossed_Lines(lines,epsilon=0.001)->tuple:
                 if newlines:
                     return((newlines,line,line1))
 
-def Connect_Lines(lines,ref,epsilon=0.001)->list:
+def Connect_Lines(lines,ref,epsilon=0.001):
     lines1=lines
     while Find_Connected_Lines(lines1,epsilon):
         r=Find_Connected_Lines(lines1,epsilon)
@@ -923,7 +923,7 @@ def Connect_Lines(lines,ref,epsilon=0.001)->list:
         lines1.append(r[0])
     return lines1
 
-def Lines_vs_Sect(lines,sector,ref,epsilon=0.001)->list:
+def Lines_vs_Sect(lines,sector,ref,epsilon=0.001):
     output=[]
     for line in lines:
         visible=Lines_Not_Matching(line.Visibility(sector,ref,epsilon),epsilon)
@@ -934,7 +934,7 @@ def Lines_vs_Sect(lines,sector,ref,epsilon=0.001)->list:
     else:
         return None
 
-def Lines_vs_Sectors(lines,sectors,ref,epsilon=0.001)->list:
+def Lines_vs_Sectors(lines,sectors,ref,epsilon=0.001):
     temp=lines
     for sect in sectors:
         temp=Lines_vs_Sect(temp,sect,ref,epsilon)
@@ -1028,7 +1028,7 @@ def SaveData(data,name,path=""):
         pickle.dump(data,filehandle)
     print("\tData written to:\t"+saveFile)
 
-def LoadData(name,path="")->list:
+def LoadData(name,path=""):
     import os,pickle
     loadFile=os.path.join(path,name)+".data"
     with open(loadFile,'rb') as filehandle:
@@ -1036,7 +1036,7 @@ def LoadData(name,path="")->list:
     print("\tData loaded from:\t"+loadFile)
     return data
 
-def LoadTxt(name,split="\n",path="")->list:
+def LoadTxt(name,split="\n",path=""):
     with open(path+name) as file:
         return file.read().split(split)        
 
@@ -1051,7 +1051,7 @@ def LoadLines(name,split1="\n",split2=",",path=""):
         lines.append(Line(points[i],points[i+1]))
     return lines
 
-def Filter(data,cutoff=125)->list:
+def Filter(data,cutoff=125):
     from scipy import signal
     import numpy
     data=numpy.array(data)
@@ -1069,7 +1069,7 @@ def f(formula,**kwargs):
     expr=sympy.sympify(formula)
     return expr.evalf(subs=kwargs)
 
-def dhms(seconds)->str:
+def dhms(seconds):
     s=str(round(seconds%60,2))
     m=str(int((seconds//60)%60))
     h=str(int((seconds//3600)%24))
@@ -1099,7 +1099,7 @@ def Remove_Matching_Lines(lines,epsilon=0.001):
         lines1.remove(line)
     return lines1
 
-def atan3(y,x,epsilon=0.001)->float:
+def atan3(y,x,epsilon=0.001):
     from math import atan,pi
     from numpy import sign
     if abs(x)<=epsilon:
