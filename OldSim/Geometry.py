@@ -1041,12 +1041,14 @@ def LoadTxt(name:str,split:str="\n",path:str="")->list:
     with open(path+name) as file:
         return file.read().split(split)        
 
-def LoadLines(name:str,split1:str="\n",split2:str=",",path:str=""):
-    text=LoadTxt(name,split1,path)
+def Points(text):
     points=[]
     for txt in text:
         x,y=txt.split(',')
         points.append(Point(float(x),float(y)))
+    return points
+
+def Lines(points):
     lines=[]
     for i in range(-1,len(points)-1):
         lines.append(Line(points[i],points[i+1]))
@@ -1110,6 +1112,31 @@ def atan3(y:float,x:float,epsilon=0.001)->float:
             return sign(y)*pi/2
     else:
         return atan(y/x)
+
+def FixPoints(points):
+    points1=points
+
+    for i in range(1,len(points1)):
+        mindist=1e30
+        min_j=i
+
+        for j in range(i,len(points1)):
+            dist=points1[i-1].Distance(points1[j])
+            if dist <= mindist:
+                min_j=j
+                mindist=dist
+
+        points1[min_j],points1[i]=points1[i],points1[min_j]
+
+    return points1
+
+
+
+
+
+
+
+
 
 """def NmbrTrue(bools:list,num:int)->bool:
     i=0
