@@ -4,38 +4,52 @@ from math import pi,cos,sin
 import numpy as np
 import random
 
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 
-ast=Asteroid("Cardiotida")
-as1=Asteroid()
-
-x=Points(LoadTxt("cardiotida.txt"))
-random.shuffle(x)
-
-x1=Lines(x)
-
-as1.Lines(x1)
-as1.Plot()
-
-x=FixPoints(x)
-
-x2=Lines(x)
-
-ast.Lines(x2)
-ast.Plot()
+"""ast=Asteroid(phase=0,increment=pi/16,radius=100,Density=1000)
+ast.Ellipse(a=50,b=50,increment=pi/64)
+ast.Test(1)
+plot=Graph()
+plot.Values(ast.shine)
 Graph.Show()
+exit()"""
+
+text=LoadTxt("Cilindar/Cilindar.xyz",split1=" ")
+points=Points_Coord(text,True)
+x,z,y = zip(*points)
+points=list(zip(x,y,z))
+
+fig=plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+ax.scatter(x,y,z)
+plt.savefig("Object")
+
+shine=[]
+slices=Slice(points,7)
+#print(slices)
+j=0
+for sl in slices:
+    print(j)
+    ast=Asteroid(phase=pi/18,increment=pi/64,radius=1000,Density=100)
+    ast.Lines(Lines_From_Coords(FixPoints(sl)))
+    plot=Graph()
+    plot.Lines(Lines_From_Coords(FixPoints(sl)))
+    Graph.Show()
+    
+    """ast.Test()
+    if not shine:
+        shine=ast.shine
+    else:
+        for i in range(len(ast.shine)):
+            shine[i]=shine[i]+ast.shine[i]
+
+    j+=1
 
 
-
-#ast.Ellipse(increment=ast.increment,a=10,b=10)
-
-#ast.Plot().Save(ast.name)
-
-"""ast.Test(1)
-ast.Save()"""
-
-#ast.Test(1)
-
-
-#plot.Save("Shine_"+ast.name+"_"+str(round(ast.increment,4))+"_"+str(ast.radius)+"_"+str(round(ast.phase,4)))
-
-"""Graph.Show()"""
+plot=Graph()
+plot.Values(shine)
+plot.Save("shine")
+plot=Graph()
+plot.Values(Filter(shine))
+plot.Save("FilteredShine")"""

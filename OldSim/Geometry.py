@@ -568,10 +568,11 @@ class Line:
         /
         (cos(incline)+cos(deflection))
         )
-        return 1
+        #return 1
 
     def Line_Shine(self,observer,illuminator,Density:float=100,albedo=1)->float:
         points=self.Inerpolate(Density)
+        #points=[self.Midpoint()]
         shine=0
         for p in points:
             shine+=(albedo*self.Point_Shine(p,observer,illuminator))
@@ -826,6 +827,7 @@ class Asteroid:
         maxSteps=len(packets)-1
         print_progress_bar(0,1,prefix=" "+self.name+"\tLine Shine:\t\t")
         for l in packets:
+            
             shines.append(Lines_Shine(l,Density))
             step=packets.index(l)
 
@@ -1018,7 +1020,7 @@ def Lines_Shine(packet:tuple,Density:float=100):
     shine=0
     for line in lines:
         shine+=line.Line_Shine(observer,illuminator,Density)
-        #shine+=line.Lenght()
+        #shine+=round(line.Lenght())
         #shine+=1
     return shine
 
@@ -1037,18 +1039,27 @@ def LoadData(name:str,path:str="")->list:
     print("\tData loaded from:\t"+loadFile)
     return data
 
-def LoadTxt(name:str,split:str="\n",path:str="")->list:
+def LoadTxt(name:str,split:str="\n",split1:str=",",path:str="")->list:
     with open(path+name) as file:
-        return file.read().split(split)        
+        text=file.read().split(split)
+        out=[]
+        for t in text:
+            out.append(tuple(t.split(split1)))
+        return out    
 
-def Points(text):
+def Points_Coord(coords,dimensions:bool=False,):
     points=[]
-    for txt in text:
-        x,y=txt.split(',')
-        points.append(Point(float(x),float(y)))
+    if not dimensions:
+        for coord in coords:
+            x,y=coord
+            points.append(float(x),float(y))
+    else:
+        for coord in coords:
+            x,y,z=coord
+            points.append((float(x),float(y),float(z)))
     return points
-
-def Lines(points):
+        
+def Lines_From_Coords(points):
     lines=[]
     for i in range(-1,len(points)-1):
         lines.append(Line(points[i],points[i+1]))
@@ -1130,13 +1141,27 @@ def FixPoints(points):
 
     return points1
 
+def Slice(Points3D,Nmbr):
+    Points3D.sort(key=lambda x: x[2])
+    max_z=Points3D[len(Points3D)-1][2]
+    min_z=Points3D[0][2]
+    diff=max_z-min_z
+    step=diff/Nmbr
+    
+    slices=[]
+    for i in range(Nmbr):
+        curr_slice=[]
+        start=i*step+min_z
+        end=(i+1)*step+min_z
+        for x,y,z in Points3D:
+            if z>=start and z<end:
+                curr_slice.append(Point(x,y))
+            elif i==Nmbr-1 and z>=start and z<=end:
+                curr_slice.append(Point(x,y))
+        slices.append(curr_slice)
 
-
-
-
-
-
-
+    return slices
+            
 
 """def NmbrTrue(bools:list,num:int)->bool:
     i=0
