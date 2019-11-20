@@ -4,10 +4,12 @@ from math import pi,cos,sin
 import numpy as np
 import threading
 
-ast=Asteroid("Cardiotida")
-ast.Lines(LoadLines("cardiotida.txt"))
+ast=Asteroid("Kruzici")
 
-#ast.Ellipse(increment=ast.increment,a=10,b=10)
+ast.Ellipse(increment=pi/128,p=0.5)
+ast.Ellipse(increment=pi/128,p=-0.5)
+ast.Ellipse(increment=pi/128,q=-0.5)
+ast.Ellipse(increment=pi/128,q=0.5)
 
 #ast.Plot().Save(ast.name)
 
