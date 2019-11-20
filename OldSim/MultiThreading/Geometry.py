@@ -588,7 +588,7 @@ class Graph:
         from matplotlib.pyplot import plot
         self.ax.plot(p.x,p.y,marker=marker,color=color)
 
-    def Points(self,points:list,color="black",marker="o"):
+    def Points(self,points,color="black",marker="o"):
         from matplotlib.pyplot import plot
         for p in points:
             self.ax.plot(p.x,p.y,marker=marker,color=color)
