@@ -561,14 +561,13 @@ class Line:
 
     def Point_Shine(self,p,observer,illuminator)->float:
         from math import cos
-        #incline=min(self.Closer_Angle(p,illuminator),pi-self.Closer_Angle(p,illuminator))
-        #deflection=min(self.Closer_Angle(p,observer),pi-self.Closer_Angle(p,observer))
-        """return(
+        incline=min(self.Closer_Angle(p,illuminator),pi-self.Closer_Angle(p,illuminator))
+        deflection=min(self.Closer_Angle(p,observer),pi-self.Closer_Angle(p,observer))
+        return(
         (cos(incline)*cos(deflection))
         /
         (cos(incline)+cos(deflection))
         )
-        """
         return 1
 
     def Line_Shine(self,observer,illuminator,Density:float=100,albedo=1)->float:
@@ -671,7 +670,7 @@ class Asteroid:
         for line in lines:
             self.lines.append(line)
 
-    def Ellipse(self,p=0,q=0,a=1,b=1,start=0*pi,end=2*pi,increment=1/4*pi,SignificantDigits=6):
+    def Ellipse(self,p=0,q=0,a=1,b=1,start=0*pi,end=2*pi,increment=pi/4,SignificantDigits=6):
         from math import pi,cos,sin
         import numpy
         lines=[]
@@ -682,7 +681,7 @@ class Asteroid:
             lines.append(l)
         self.lines.extend(lines)
 
-    def Function(self,xFunc,yFunc,p=0,q=0,a=1,b=1,start=0*pi,end=2*pi,increment=1/4*pi,SignificantDigits=6):
+    def Function(self,xFunc,yFunc,p=0,q=0,a=1,b=1,start=0*pi,end=2*pi,increment=pi/4,SignificantDigits=6):
         from math import pi,cos,sin
         import numpy
         lines=[]
@@ -713,6 +712,14 @@ class Asteroid:
         self.visible=Ast.visible
         self.shine=Ast.shine
         self.fixedLines=Ast.fixedLines
+
+        self.name=Ast.name
+        self.phase=Ast.phase
+        self.startPhase=Ast.startPhase
+        self.increment=Ast.increment
+        self.radius=Ast.radius
+        self.epsilon=Ast.epsilon
+        self.Density=Ast.Density
 
     def FixLines(self,epsilon=0.001,radius=5,increment=pi/2):
         import numpy
@@ -836,6 +843,15 @@ class Asteroid:
         elapsed=time.time()-start
         print("Elapsed time:\t"+dhms(elapsed))
         return self.shine
+
+    def Thread(self,phase,increment,radius):
+        epsilon=0.001
+        Density=100
+        newself=self
+        newself.Test_Shine(phase=phase,increment=increment,radius=radius,force=True,epsilon=epsilon,Density=Density)
+        plot=Graph()
+        plot.Values(newself.shine)
+        plot.Save(self.name+"_"+str(round(increment,4))+"_"+str(radius)+"_"+str(round(phase,4)))
 
     """def Multi_Thread_Visibility(self,phase=pi/2,startPhase=0,increment=pi/2,radius=5,epsilon=0.001):
         import numpy
@@ -1025,15 +1041,16 @@ def LoadTxt(name:str,split:str="\n",path:str="")->list:
     with open(path+name) as file:
         return file.read().split(split)        
 
-"""def NmbrTrue(bools:list,num:int)->bool:
-    i=0
-    for t in bools:
-        if t:
-            i+=1
-    if i==num:
-        return True
-    else:
-        return False"""
+def LoadLines(name:str,split1:str="\n",split2:str=",",path:str=""):
+    text=LoadTxt(name,split1,path)
+    points=[]
+    for txt in text:
+        x,y=txt.split(',')
+        points.append(Point(float(x),float(y)))
+    lines=[]
+    for i in range(-1,len(points)-1):
+        lines.append(Line(points[i],points[i+1]))
+    return lines
 
 def Filter(data:list,cutoff:float=125)->list:
     from scipy import signal
@@ -1083,7 +1100,28 @@ def Remove_Matching_Lines(lines:list,epsilon=0.001):
         lines1.remove(line)
     return lines1
 
-def Find_Matching_Points(points:list,epsilon=0.001):
+def atan3(y:float,x:float,epsilon=0.001)->float:
+    from math import atan,pi
+    from numpy import sign
+    if abs(x)<=epsilon:
+        if abs(y)<=epsilon:
+            return 0
+        else:
+            return sign(y)*pi/2
+    else:
+        return atan(y/x)
+
+"""def NmbrTrue(bools:list,num:int)->bool:
+    i=0
+    for t in bools:
+        if t:
+            i+=1
+    if i==num:
+        return True
+    else:
+        return False"""
+
+"""def Find_Matching_Points(points:list,epsilon=0.001):
     for p1 in points:
         for p2 in points:
             if p1 is not p2:
@@ -1115,18 +1153,8 @@ def Max_Angular_Width(lines:list,ref,epsilon=0.001): #PROVERITI
                 sectors.append((ang,p1,p2))
     sectors.sort(key=lambda tapl: tapl[0])         
     return sectors[len(sectors)-1]
+"""
 
-def atan3(y:float,x:float,epsilon=0.001)->float:
-    from math import atan,pi
-    from numpy import sign
-    if abs(x)<=epsilon:
-        if abs(y)<=epsilon:
-            return None
-        else:
-            return sign(y)*pi/2
-    else:
-        return atan(y/x)
-        
 """def Valid_Lines(lines:list,epsilon=0.001)->list:
     lines1=lines
     while Find_Crossed_Lines(lines1,epsilon):
