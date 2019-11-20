@@ -626,8 +626,8 @@ class Asteroid:
         import numpy
         lines=[]
         for i in numpy.arange(start,end,increment):
-            t0=round(Point(a*cos(i)+p,b*sin(i)+q),SignificantDigits)
-            t1=round(Point(a*cos(i+increment)+p,b*sin(i+increment)+q),SignificantDigits)
+            t0=Point(a*cos(i)+p,b*sin(i)+q)
+            t1=Point(a*cos(i+increment)+p,b*sin(i+increment)+q)
             l=Line(t0,t1)
             lines.append(l)
         self.lines.extend(lines)
