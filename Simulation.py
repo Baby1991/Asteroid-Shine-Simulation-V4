@@ -7,10 +7,10 @@ import sys
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
-path=sys.argv[1]
-filename=sys.argv[0]
+savepath0=sys.argv[2]
+filename0=sys.argv[1]
 
-text=LoadTxt(path+"/"+filename,split1=" ")
+text=LoadTxt(savepath0+"\\"+filename0+".xyz",split1=" ")
 points=Points_Coord(text,True)
 x,z,y = zip(*points)
 points=list(zip(x,y,z))
@@ -31,7 +31,7 @@ for sl in slices:
 
 plot=Graph()
 plot.Values(shine)
-plot.Save("shine_"+filename,path=path)
+plot.Save("shine_"+filename0,path=savepath0)
 plot=Graph()
 plot.Values(Filter(shine))
-plot.Save("FilteredShine_"+filename,path=path)
+plot.Save("FilteredShine_"+filename0,path=savepath0)
