@@ -9,10 +9,10 @@ import sys,os
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
-savepath0=os.getcwd()+"\\"+sys.argv[1]
+savepath0=os.path.join(os.getcwd(),sys.argv[1])
 filename0=sys.argv[2]
 
-text=LoadTxt(savepath0+"\\"+filename0+".xyz",split1=" ")
+text=LoadTxt(os.path.join(savepath0,filename0)+".xyz",split1=" ")
 points=Points_Coord(text,True)
 x,z,y = zip(*points)
 points=list(zip(x,y,z))
@@ -37,3 +37,4 @@ plot.Save("shine_"+filename0,path=savepath0)
 plot=Graph()
 plot.Values(Filter(shine))
 plot.Save("FilteredShine_"+filename0,path=savepath0)
+SaveData(shine,"shine",savepath0)
