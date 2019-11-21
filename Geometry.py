@@ -1183,7 +1183,7 @@ def Trig_Plane_Intersect(triangle,zeta,epsilon=0.001):
 
 def Test_Object(name,path,slices=100):
     import os
-
+        
     trigs=LoadTriangles(os.path.join(path,name))
     shine=[]
     slices=Slice(trigs,slices)
