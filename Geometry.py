@@ -804,8 +804,9 @@ class Asteroid:
         from math import sin,cos
         import time
 
-        if not self.fixedLines or force:
-            self.FixLines(epsilon,radius,increment)
+        """if not self.fixedLines or force:
+            self.FixLines(epsilon,radius,increment)"""
+        self.fixedLines=self.lines
         print("")
         print_progress_bar(0,1,prefix=" "+self.name+"\tLine Visibility:\t")
         
@@ -869,34 +870,6 @@ class Asteroid:
         elapsed=time.time()-start
         print("Elapsed time:\t"+dhms(elapsed))
         return self.shine
-
-    def Thread(self,phase,increment,radius):
-        epsilon=0.001
-        Density=100
-        newself=self
-        newself.Test_Shine(phase=phase,increment=increment,radius=radius,force=True,epsilon=epsilon,Density=Density)
-        plot=Graph()
-        plot.Values(newself.shine)
-        plot.Save(self.name+"_"+str(round(increment,4))+"_"+str(radius)+"_"+str(round(phase,4)))
-
-    """def Multi_Thread_Visibility(self,phase=pi/2,startPhase=0,increment=pi/2,radius=5,epsilon=0.001):
-        import numpy
-        from math import sin,cos
-        import concurrent.futures
-        print("Multithreading:")
-        with concurrent.futures.ThreadPoolExecutor() as executor:
-            threads=[]
-            output=[]
-            for t in numpy.arange(startPhase,2*pi+startPhase,increment):    
-                observer=Point(radius*cos(t),radius*sin(t))
-                illuminator=Point(radius*cos(t+phase),radius*sin(t+phase))
-                #Visible_Line_From_Both_Points(self.fixedLines,observer,illuminator,epsilon)
-                threads.append((executor.submit(Visible_Line_From_Both_Points,(self.fixedLines,observer,illuminator,epsilon)),illuminator,observer))
-            print("Generated threads")
-            for t,illuminator,observer in threads:
-                output.append((t.result(),illuminator,observer))
-            print("Threads worked")
-            return output"""
 
 def Lines_Not_Matching(lines:list,epsilon=0.001)->list:
     output=[]
@@ -1063,38 +1036,20 @@ def LoadData(name:str,path:str="")->list:
     print("\tData loaded from:\t"+loadFile)
     return data
 
-def LoadTxt(name:str,split:str="\n",split1:str=",",path:str="")->list:
-    with open(path+name) as file:
-        text=file.read().split(split)
-        out=[]
-        for t in text:
-            out.append(tuple(t.split(split1)))
-        return out    
-
-def Points_Coord(coords,dimensions:bool=False,):
-    points=[]
-    if not dimensions:
-        for coord in coords:
-            x,y=coord
-            points.append(float(x),float(y))
-    else:
-        for coord in coords:
-            x,y,z=coord
-            points.append((float(x),float(y),float(z)))
-    return points
-        
-def Lines_From_Coords(points,n=7,epsilon=0.001):
-    lines=[]
-    """for i in range(-1,len(points)-1):
-        lines.append(Line(points[i],points[i+1]))"""
-    for p in points:
-        points1=list(points)
-        points1.remove(p)
-        points1=p.Sort_Points_By_Distance(points1)
-        for q in points1[0:n]:
-            if not any([Line(p,q).Match(line,epsilon) for line in lines]):
-                lines.append(Line(p,q))
-    return lines
+def LoadTriangles(name,path=""):
+    import os
+    with open(os.path.join(path,name)+".33") as txt:
+        lines=txt.read().split('\n')
+        trigs=[]
+        for l in lines:
+            l1=[]
+            points=l.split('\t')
+            for p in points:
+                coords=p.split(',')
+                p1=(float(coords[0]),float(coords[1]),float(coords[2]))
+                l1.append(p1)
+            trigs.append(l1)
+        return trigs
 
 def Filter(data:list,cutoff:float=125)->list:
     from scipy import signal
@@ -1155,144 +1110,74 @@ def atan3(y:float,x:float,epsilon=0.001)->float:
     else:
         return atan(y/x)
 
-def FixPoints(points):
-    points1=points
+def Slice(Triangles,Nmbr,epsilon=0.001):
+    import numpy as np
+    zs=[]
+    for tr in Triangles:
+        zs.extend([tr[0][2],tr[1][2],tr[2][2]])
+    zmax=max(zs)
+    zmin=min(zs)
+    step=(zmax-zmin)/(Nmbr+1)
 
-    for i in range(1,len(points1)):
-        mindist=1e30
-        min_j=i
-
-        for j in range(i,len(points1)):
-            dist=points1[i-1].Distance(points1[j])
-            if dist <= mindist:
-                min_j=j
-                mindist=dist
-
-        points1[min_j],points1[i]=points1[i],points1[min_j]
-
-    return points1
-
-def Slice(Points3D,Nmbr):
-    Points3D.sort(key=lambda x: x[2])
-    max_z=Points3D[len(Points3D)-1][2]
-    min_z=Points3D[0][2]
-    diff=max_z-min_z
-    step=diff/Nmbr
-    
     slices=[]
-    for i in range(Nmbr):
-        curr_slice=[]
-        start=i*step+min_z
-        end=(i+1)*step+min_z
-        for x,y,z in Points3D:
-            if z>=start and z<end:
-                curr_slice.append(Point(x,y))
-            elif i==Nmbr-1 and z>=start and z<=end:
-                curr_slice.append(Point(x,y))
-        slices.append(curr_slice)
+    for zeta in np.arange(zmin,zmax+step,step):
+        sl=[]
+        for tr in Triangles:
+            sl.extend(Trig_Plane_Intersect(tr,zeta,epsilon))
+        if sl:
+            slices.append(sl)
 
     return slices
-            
 
-"""def NmbrTrue(bools:list,num:int)->bool:
-    i=0
-    for t in bools:
-        if t:
-            i+=1
-    if i==num:
-        return True
+def Line_Plane_Intersect(i0,i1,zeta):
+    x0,y0,z0=i0
+    x1,y1,z1=i1
+    t=(zeta-z0)/(z1-z0)
+    A=x0+t*(x1-x0)
+    B=y0+t*(y1-y0)
+    return Point(A,B)
+
+def Trig_Plane_Intersect(triangle,zeta,epsilon=0.001):
+    points=list(triangle)
+    points.sort(key=lambda x: x[2])
+    #p,i = (x,y,z)
+    p0=points[0]
+    p1=points[1]
+    p2=points[2]
+
+    f0=abs(p0[2]-zeta)<=epsilon
+    f1=abs(p1[2]-zeta)<=epsilon
+    f2=abs(p2[2]-zeta)<=epsilon
+
+    if p1[2]<zeta<p2[2]:
+        r1=Line_Plane_Intersect(p1,p2,zeta)
+        r2=Line_Plane_Intersect(p0,p2,zeta)
+        return [Line(r1,r2)]
+
+    elif p0[2]<zeta<p1[2]:
+        r1=Line_Plane_Intersect(p0,p2,zeta)
+        r2=Line_Plane_Intersect(p0,p1,zeta)
+        return [Line(r1,r2)]
+
+    elif f1 and p0[2]<zeta<p2[2]:
+        r1=Point(p1[0],p1[1])
+        r2=Line_Plane_Intersect(p0,p2,zeta)
+        return [Line(r1,r2)]
+
+    elif f2 and f1 and not f0:
+        return [Line(Point(p2[0],p2[1]),Point(p1[0],p1[1]))]
+
+    elif f0 and f1 and not f2:
+        return [Line(Point(p0[0],p0[1]),Point(p1[0],p1[1]))]
+
+    elif f0 and f1 and f2:
+        
+        return [
+        Line(Point(p0[0],p0[1]),Point(p1[0],p1[1])),
+        Line(Point(p0[0],p0[1]),Point(p2[0],p2[1])),
+        Line(Point(p1[0],p1[1]),Point(p2[0],p2[1]))
+        ]
+
     else:
-        return False"""
+        return []
 
-"""def Find_Matching_Points(points:list,epsilon=0.001):
-    for p1 in points:
-        for p2 in points:
-            if p1 is not p2:
-                if p1.Match(p2,epsilon):
-                    return (p1,p2) 
-
-def Remove_Matching_Points(points:list,epsilon=0.001):
-    points1=points
-    while Find_Matching_Points(points1,epsilon) is not None:
-        _,point=Find_Matching_Points(points1,epsilon)
-        points1.remove(point)
-    return points1
-
-def All_Points(lines:list,epsilon=0.001):
-    points=[]
-    for line in lines:
-        points.append(line.start)
-        points.append(line.end)
-    return Remove_Matching_Points(points,epsilon)
-
-def Max_Angular_Width(lines:list,ref,epsilon=0.001): #PROVERITI
-    import operator
-    points=All_Points(lines,epsilon)
-    sectors=[]
-    for p1 in points:
-        for p2 in points:
-            if not p1.Match(p2,epsilon):
-                ang=ref.Angle_Points(p1,p2)
-                sectors.append((ang,p1,p2))
-    sectors.sort(key=lambda tapl: tapl[0])         
-    return sectors[len(sectors)-1]
-"""
-
-"""def Valid_Lines(lines:list,epsilon=0.001)->list:
-    lines1=lines
-    while Find_Crossed_Lines(lines1,epsilon):
-        r=Find_Crossed_Lines(lines1,epsilon)
-        lines1.remove(r[1])
-        lines1.remove(r[2])
-        lines1.extend(r[0])
-    return lines1"""
-
-"""def Test_Lines(lines:list,phase=pi/2,startPhase=0,increment=pi/2,radius=5,epsilon=0.001):
-    import numpy
-    from math import sin,cos
-    import time
-
-    print_progress_bar(0,1,prefix="\tLine Visibility:\t")
-    
-    output=[]
-    start=time.time()
-    
-    maxSteps=(2*pi/increment)-1
-
-    for t in numpy.arange(startPhase,2*pi+startPhase,increment):
-        
-        observer=Point(radius*cos(t),radius*sin(t))
-        illuminator=Point(radius*cos(t+phase),radius*sin(t+phase))
-        
-        visible=Visible_Line_From_Both_Points(lines,observer,illuminator,epsilon)
-
-        output.append((visible,illuminator,observer))
-
-        step=t/increment
-
-        print_progress_bar(step,maxSteps,prefix="\tLine Visibility:\t",suffix="\t"+str(Time_Left(start,time.time(),step,maxSteps)),message=("\tVisibility Finished,\tElapsed Time = "+str(round(time.time()-start,1))))
-    
-    return output"""
-
-"""def Shine(packets:list,Density:float=100):
-    import time
-    shines=[]
-    start=time.time()
-    maxSteps=len(packets)-1
-    print_progress_bar(0,1,prefix="\tLine Shine:\t\t")
-    for l in packets:
-        shines.append(Lines_Shine(l,Density))
-        step=packets.index(l)
-        print_progress_bar(step,maxSteps,prefix="\tLine Shine:\t\t",suffix="\t"+str(Time_Left(start,time.time(),step,maxSteps)),message=("\tShine Finished,\t\tElapsed Time = "+str(round(time.time()-start,1))))
-    return shines"""
-
-"""def Circle(p=0,q=0,r=1,start=0*pi,end=2*pi,increment=1/4*pi,SignificantDigits=6)->list:
-    from math import pi,cos,sin
-    import numpy
-    lines=[]
-    for i in numpy.arange(start,end,increment):
-        t0=round(Point(r*cos(i)+p,r*sin(i)+q),SignificantDigits)
-        t1=round(Point(r*cos(i+increment)+p,r*sin(i+increment)+q),SignificantDigits)
-        l=Line(t0,t1)
-        lines.append(l)
-    return lines"""
