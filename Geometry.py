@@ -1120,7 +1120,7 @@ def Slice(Triangles,Nmbr,epsilon=0.001):
     step=(zmax-zmin)/(Nmbr+1)
 
     slices=[]
-    for zeta in np.arange(zmin,zmax+step,step):
+    for zeta in np.arange(zmin+step,zmax,step):
         sl=[]
         for tr in Triangles:
             sl.extend(Trig_Plane_Intersect(tr,zeta,epsilon))
@@ -1183,7 +1183,7 @@ def Trig_Plane_Intersect(triangle,zeta,epsilon=0.001):
 
 def Test_Object(name,path,slices=100):
     import os
-        
+
     trigs=LoadTriangles(os.path.join(path,name))
     shine=[]
     slices=Slice(trigs,slices)
