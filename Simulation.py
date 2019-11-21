@@ -12,4 +12,4 @@ name=sys.argv[2]
 
 shine=Test_Object(name,path,3)
 
-SaveData(shine,"shine",path)
+SaveData(shine,name,path)
