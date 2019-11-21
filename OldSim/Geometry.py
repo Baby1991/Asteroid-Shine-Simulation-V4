@@ -31,6 +31,30 @@ class Point:
         else:
             return False
 
+    def Sort_Points_By_Distance(self,points: list)->list:
+        import operator
+        
+        points_with_dist=[]
+        points1=[]
+
+        for p in points:
+            points_with_dist.append(
+                (p.Distance(self),
+                p)
+                )
+
+        for i in range(len(points_with_dist)):
+            lowest_value_index = i
+            for j in range(i + 1, len(points_with_dist)):
+                if points_with_dist[j][0] < points_with_dist[lowest_value_index][0]:
+                    lowest_value_index = j
+            points_with_dist[i], points_with_dist[lowest_value_index] = points_with_dist[lowest_value_index], points_with_dist[i]
+
+        for i in points_with_dist:
+            points1.append(i[1])
+
+        return points1
+
     def Sort_Lines_By_Distance(self,lines: list)->list:
         import operator
         
@@ -1059,10 +1083,17 @@ def Points_Coord(coords,dimensions:bool=False,):
             points.append((float(x),float(y),float(z)))
     return points
         
-def Lines_From_Coords(points):
+def Lines_From_Coords(points,n=7,epsilon=0.001):
     lines=[]
-    for i in range(-1,len(points)-1):
-        lines.append(Line(points[i],points[i+1]))
+    """for i in range(-1,len(points)-1):
+        lines.append(Line(points[i],points[i+1]))"""
+    for p in points:
+        points1=list(points)
+        points1.remove(p)
+        points1=p.Sort_Points_By_Distance(points1)
+        for q in points1[0:n]:
+            if not any([Line(p,q).Match(line,epsilon) for line in lines]):
+                lines.append(Line(p,q))
     return lines
 
 def Filter(data:list,cutoff:float=125)->list:
