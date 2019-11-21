@@ -1188,8 +1188,9 @@ def Trig_Plane_Intersect(triangle,zeta,epsilon=0.001):
         return []
 
 def Test_Object(name,path,slices=100):
-    import os
-
+    import os,time
+    start=time.time()
+    print("Testing:\t"+name)
     trigs=LoadTriangles(os.path.join(path,name))
     shine=[]
     slices=Slice(trigs,slices)
@@ -1204,5 +1205,5 @@ def Test_Object(name,path,slices=100):
             for i in range(len(ast.shine)):
                 shine[i]=shine[i]+ast.shine[i]
         j+=1
-    
+    print("Testing for\t"+name+"\t ended. Elapsed Time: "+dhms(time.time()-start))
     return shine
