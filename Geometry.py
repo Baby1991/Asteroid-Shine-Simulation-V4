@@ -865,10 +865,16 @@ class Asteroid:
 
     def Test(self,force:bool=0):
         import time
+        import io
+        from contextlib import redirect_stdout
+        print("\tTesting:\t"+self.name)
         start=time.time()
-        self.Test_Shine(self.phase,self.startPhase,self.increment,self.radius,self.epsilon,self.Density,force)
+        trap = io.StringIO()
+        with redirect_stdout(trap):
+            self.Test_Shine(self.phase,self.startPhase,self.increment,self.radius,self.epsilon,self.Density,force)
+        
         elapsed=time.time()-start
-        print("Elapsed time:\t"+dhms(elapsed))
+        print("\t"+self.name+"\tElapsed time:\t"+dhms(elapsed))
         return self.shine
 
 def Lines_Not_Matching(lines:list,epsilon=0.001)->list:
