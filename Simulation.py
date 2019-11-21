@@ -22,7 +22,7 @@ slices=Slice(points,10)
 #print(slices)
 for sl in slices:
     ast=Asteroid(phase=pi/9,increment=pi/36,radius=5000,Density=100)
-    ast.Lines(Lines_From_Coords(FixPoints(sl),n=7))
+    ast.Lines(Lines_From_Coords(FixPoints(sl),n=4))
     
     ast.Test()
     if not shine:
