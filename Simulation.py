@@ -7,8 +7,8 @@ import sys
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
-savepath0=sys.argv[2]
-filename0=sys.argv[1]
+savepath0=sys.argv[1]
+filename0=sys.argv[2]
 
 text=LoadTxt(savepath0+"\\"+filename0+".xyz",split1=" ")
 points=Points_Coord(text,True)
