@@ -31,10 +31,11 @@ for sl in slices:
         for i in range(len(ast.shine)):
             shine[i]=shine[i]+ast.shine[i]
 
+SaveData(shine,"shine",savepath0)
+
 plot=Graph()
 plot.Values(shine)
 plot.Save("shine_"+filename0,path=savepath0)
 plot=Graph()
 plot.Values(Filter(shine))
 plot.Save("FilteredShine_"+filename0,path=savepath0)
-SaveData(shine,"shine",savepath0)
