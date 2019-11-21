@@ -1181,3 +1181,22 @@ def Trig_Plane_Intersect(triangle,zeta,epsilon=0.001):
     else:
         return []
 
+def Test_Object(name,path,slices=100):
+    import os
+
+    trigs=LoadTriangles(os.path.join(path,name))
+    shine=[]
+    slices=Slice(trigs,slices)
+    j=0
+    for sl in slices:
+        ast=Asteroid(name=name+"_"+str(j),phase=pi/9,increment=pi/36,radius=5000,Density=100)
+        ast.Lines(sl)
+        ast.Test()
+        if not shine:
+            shine=ast.shine
+        else:
+            for i in range(len(ast.shine)):
+                shine[i]=shine[i]+ast.shine[i]
+        j+=1
+    
+    return shine
