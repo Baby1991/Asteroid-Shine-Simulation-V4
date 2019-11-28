@@ -10,6 +10,6 @@ from mpl_toolkits.mplot3d import Axes3D
 path=os.path.join(os.getcwd(),sys.argv[1])
 name=sys.argv[2]
 
-shine=Test_Object(name,path,50)
-
+ast=Asteroid(name,path)
+shine=ast.Test_Object(1)
 SaveData(shine,name,path)

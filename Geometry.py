@@ -653,7 +653,7 @@ class Graph:
         from matplotlib.pyplot import show
         show()
 
-class Asteroid:
+class Asteroid_Slice:
     
     lines=[]
     visible=[]
@@ -877,6 +877,72 @@ class Asteroid:
         print("\t"+self.name+"\tElapsed time:\t"+dhms(elapsed))
         return self.shine
 
+class Asteroid:
+    
+    trigs=[]
+    shine=[]
+    name=""
+    path=""
+
+    def __init__(self,name,path=""):
+        import os
+        with open(os.path.join(path,name)+".33") as txt:
+            lines=txt.read().split('\n')
+            trigs=[]
+            for l in lines:
+                l1=[]
+                points=l.split('\t')
+                for p in points:
+                    coords=p.split(',')
+                    p1=(float(coords[0]),float(coords[1]),float(coords[2]))
+                    l1.append(p1)
+                trigs.append(l1)
+
+            self.trigs=trigs
+            self.name=name
+            self.path=path
+
+    def Slice(self,Nmbr,epsilon=0.001):
+        import numpy as np
+        zs=[]
+        for tr in self.trigs:
+            zs.extend([tr[0][2],tr[1][2],tr[2][2]])
+        zmax=max(zs)
+        zmin=min(zs)
+        step=(zmax-zmin)/(Nmbr+1)
+
+        slices=[]
+        for zeta in np.arange(zmin+step,zmax,step):
+            sl=[]
+            for tr in self.trigs:
+                sl.extend(Trig_Plane_Intersect(tr,zeta,epsilon))
+            if sl:
+                slices.append(sl)
+
+        self.slices=slices
+        return slices
+
+    def Test_Object(self,slices=100):
+        import os,time
+        print("Test for "+self.name+" starting")
+        start=time.time()
+        shine=[]
+        self.Slice(slices)
+        j=0
+        for sl in self.slices:
+            ast=Asteroid_Slice(name=self.name+"_"+str(j),phase=pi/9,increment=pi/36,radius=5000,Density=100)
+            ast.Lines(sl)
+            ast.Test()
+            if not shine:
+                shine=ast.shine
+            else:
+                for i in range(len(ast.shine)):
+                    shine[i]=shine[i]+ast.shine[i]
+            j+=1
+        print("Testing for "+self.name+" ended. Elapsed Time: "+dhms(time.time()-start))
+        self.shine=shine
+        return shine
+
 def Lines_Not_Matching(lines:list,epsilon=0.001)->list:
     output=[]
     if lines is not None:
@@ -1042,21 +1108,6 @@ def LoadData(name:str,path:str="")->list:
     print("\tData loaded from:\t"+loadFile)
     return data
 
-def LoadTriangles(name,path=""):
-    import os
-    with open(os.path.join(path,name)+".33") as txt:
-        lines=txt.read().split('\n')
-        trigs=[]
-        for l in lines:
-            l1=[]
-            points=l.split('\t')
-            for p in points:
-                coords=p.split(',')
-                p1=(float(coords[0]),float(coords[1]),float(coords[2]))
-                l1.append(p1)
-            trigs.append(l1)
-        return trigs
-
 def Filter(data:list,cutoff:float=125)->list:
     from scipy import signal
     import numpy
@@ -1116,25 +1167,6 @@ def atan3(y:float,x:float,epsilon=0.001)->float:
     else:
         return atan(y/x)
 
-def Slice(Triangles,Nmbr,epsilon=0.001):
-    import numpy as np
-    zs=[]
-    for tr in Triangles:
-        zs.extend([tr[0][2],tr[1][2],tr[2][2]])
-    zmax=max(zs)
-    zmin=min(zs)
-    step=(zmax-zmin)/(Nmbr+1)
-
-    slices=[]
-    for zeta in np.arange(zmin+step,zmax,step):
-        sl=[]
-        for tr in Triangles:
-            sl.extend(Trig_Plane_Intersect(tr,zeta,epsilon))
-        if sl:
-            slices.append(sl)
-
-    return slices
-
 def Line_Plane_Intersect(i0,i1,zeta):
     x0,y0,z0=i0
     x1,y1,z1=i1
@@ -1186,24 +1218,3 @@ def Trig_Plane_Intersect(triangle,zeta,epsilon=0.001):
 
     else:
         return []
-
-def Test_Object(name,path,slices=100):
-    import os,time
-    start=time.time()
-    print("Testing:\t"+name)
-    trigs=LoadTriangles(os.path.join(path,name))
-    shine=[]
-    slices=Slice(trigs,slices)
-    j=0
-    for sl in slices:
-        ast=Asteroid(name=name+"_"+str(j),phase=pi/9,increment=pi/36,radius=5000,Density=100)
-        ast.Lines(sl)
-        ast.Test()
-        if not shine:
-            shine=ast.shine
-        else:
-            for i in range(len(ast.shine)):
-                shine[i]=shine[i]+ast.shine[i]
-        j+=1
-    print("Testing for\t"+name+"\t ended. Elapsed Time: "+dhms(time.time()-start))
-    return shine
